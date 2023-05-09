@@ -7,6 +7,8 @@
 
 using namespace std;
 
+// TODO: Landmark interactions, income/payment, determine winner, etc. 
+
 int main() {
     cout << "Welcome to Machi Koro" << endl;
     cout << "How many people will be playing? Must be an integer between 1 and 4 inclusive." << endl;
@@ -21,14 +23,14 @@ int main() {
     GameBoard* gameBoard = new GameBoard(numOfPlayers);
     Shop* shop = new Shop();
     bool winner = false;
-    int playerCounter = 1;
+    int playerCounter = 0;
     string rollVerify;
     srand(time(NULL));
     int roll;
     string purchaseItem;
-    cout << "At any time, type B to show your balance" << endl; // TODO: MAKE SURE THIS WORKS
+    cout << "At any time, type BAL to show your balance" << endl; // TODO: MAKE SURE THIS WORKS
     while (!winner) {
-        cout << "Player " << playerCounter << "'s turn!" << endl;
+        cout << "Player " << playerCounter + 1 << "'s turn!" << endl;
         cout << "Press R to roll the dice" << endl;
         while(cin >> rollVerify) {
             if (rollVerify == "R") {
@@ -40,22 +42,49 @@ int main() {
         cout << "You rolled a " << rand() % 6 + 1 << "." << endl;
 
         // income/pay
-        cout << "Would you like to purchase something? Type Y or N." << endl;
+
+        // purchase
+        shop->purchaseItemPrompt();
         while (cin >> purchaseItem) {
             if (purchaseItem == "Y") {
-                cout << "What would you like to purchase? Type N for nothing. Type L1 to list the options for dice rolls 1-6 and L2 for 7-12. " << endl;
+                shop->purchaseOptionsPrompt();
                 while(cin >> purchaseItem) {
-                    if (purchaseItem == "N") {
+                    if (purchaseItem == "N") { // nothing
                         break;
-                    } else if (purchaseItem == "L1") {
-                        // list options for 1-6
-                    } else if (purchaseItem == "L2") {
-                        // list options for 7-12
+                    } else if (purchaseItem == "R") { // RBGPL
+                        if (shop->purchaseEstablishment(gameBoard, "red", playerCounter, shop->redNames, shop->redPrice, shop->amountOfRed, 2)) { // 2 red establishments
+                            break;
+                        }
+                        // if got here, did not purchase an establishment
+                        shop->purchaseOptionsPrompt();
+                    } else if (purchaseItem == "B") {
+                        if (shop->purchaseEstablishment(gameBoard, "blue", playerCounter, shop->blueNames, shop->bluePrice, shop->amountOfBlue, 5)) { // 5 blue establishments
+                            break;
+                        }
+                        // if got here, did not purchase an establishment
+                        shop->purchaseOptionsPrompt();
+                    } else if (purchaseItem == "G") {
+                        if (shop->purchaseEstablishment(gameBoard, "green", playerCounter, shop->blueNames, shop->greenPrice, shop->amountOfGreen, 5)) { // 5 green establishments
+                            break;
+                        }
+                        // if got here, did not purchase an establishment
+                        shop->purchaseOptionsPrompt();
+                    } else if (purchaseItem == "P") {
+                        if (shop->purchaseEstablishment(gameBoard, "purple", playerCounter, shop->blueNames, shop->greenPrice, shop->amountOfPurple, 3)) { // 3 purple establishments
+                            break;
+                        }
+                        // if got here, did not purchase an establishment
+                        shop->purchaseOptionsPrompt();
+                    } else if (purchaseItem == "L") {
+                        shop->purchaseLandmark(); // this function call is not finished
+                        // if upgraded landmark, check if winner
+                        // can probably send address of winner boolean so it's editable
                     } else {
                         cout << "Invalid option, try again." << endl;
                     }
                 }
-            } else if (purchaseItem == "N") {
+                break;
+            } else if (purchaseItem == "N") { // no
                 break;
             } else {
                 cout << "Invalid option, try again." << endl;
@@ -63,12 +92,8 @@ int main() {
         }
 
         playerCounter++;
-        
-        // red
-        // green and blue
-        // purple
 
-        // if upgraded landmark, check if winner
+
     }
     delete gameBoard;
 }

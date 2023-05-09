@@ -4,17 +4,21 @@
 
 class GameBoard {
     public:
+        std::vector<Player*> players;
+
         GameBoard(int numOfPlayers) {
-            this->players = new Player* [numOfPlayers];
+            this->players = std::vector<Player*> (numOfPlayers);
+            for (int i = 0; i < numOfPlayers; i++) {
+                players[i] = new Player();
+            }
             this->numOfPlayers = numOfPlayers;
         }
 
         ~GameBoard() {
-            for (int i = 0; i < numOfPlayers; i++) {
-                delete players[i];
+            for (Player* i: players) {
+                delete i;
             }
         }
     private:
-        Player** players;
         int numOfPlayers;
 };
