@@ -1,8 +1,8 @@
 let wheat_fields = 0;
 
-export function buy(building_num) {
+export function buy(building_num, player) {
     if (building_num === 0) {
-        wheat_fields++;
+        player.establishments[0]++;
         document.querySelector('#wfs').innerHTML = `Wheat fields: ${wheat_fields}`;
     }
 }

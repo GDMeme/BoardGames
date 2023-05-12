@@ -3,44 +3,42 @@
 
 <head>
     <title>Machi Koro</title>
-    <style>
-        .center {
-            text-align: center;
-        }
-    </style>
 </head>
-<div class="center">
-    <h1 class="center" id="titletext">Welcome to Machi Koro!</h1>
+<div style="text-align: center">
+    <h1 id="titletext">Welcome to Machi Koro!</h1>
 
     <body>
         <div id="beforegametext">
-            <div class="center" id="numberofplayerstext">
-                <p>How many people will be playing?</p>
-            </div>
-            <div class="center">
-                <select id="numberofplayersselect">
-                    <option disabled selected value="1"> --select an option -- </option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                </select>
-            </div>
-            <div class="center">
-                <p>
-                    <button id="submitplayersbutton" disabled>Submit</button>
-                </p>
-            </div>
-        </div>
-        <div id="startgametext">
+            <p>How many people will be playing?</p>
+            <select id="numberofplayersselect">
+                <option disabled selected value="1"> --select an option -- </option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
             <p>
-                hey
+                <button id="submitplayersbutton" disabled>Submit</button>
+            </p>
+        </div>
+        <div id="startgametext" style="display: none">
+            <p>
+                Player 1's turn!
+            </p>
+            <p>
+                <button id="rolldicebutton">
+                    Click here to roll the dice!
+                </button>
+            </p>
+            <p>
+                <button id="endturnbutton" disabled>
+                    End turn
+                </button>
             </p>
         </div>
         <div id="buyestablishments">
-
-            <div id="test">hi</div>
-            <div id="wfs">Wheat fields: 0</div>
-            <button id="buywheatfieldbutton">Click me to buy a wheat field</button>
+            <div id="wfs">What would you like to buy?</div>
+            <button id="buywheatfieldbutton">Wheat Field</button>
+            <button id="buyranchbutton">Ranch</button>
         </div>
         <script src="./script.js" type="module"></script>
 
