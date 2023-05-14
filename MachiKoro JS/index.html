@@ -20,9 +20,19 @@
                 <button id="submitplayersbutton" disabled>Submit</button>
             </p>
         </div>
+        <div style="text-align: left">
+            <div>
+                <u>
+                    <font size="6"> Player 1 </font>
+                </u>
+            </div>
+            Player 1
+        </div>
         <div id="startgametext" style="display: none">
             <p>
+            <div id="playerturn">
                 Player 1's turn!
+            </div>
             </p>
             <p>
                 <button id="rolldicebutton">
@@ -30,15 +40,25 @@
                 </button>
             </p>
             <p>
+            <div id="rollnumber" style="display: none">
+                You rolled a
+            </div>
+            </p>
+            <p>
                 <button id="endturnbutton" disabled>
                     End turn
                 </button>
             </p>
         </div>
-        <div id="buyestablishments">
-            <div id="wfs">What would you like to buy?</div>
+        <div id="buyestablishment" style="display: none">
+            What would you like to buy?
             <button id="buywheatfieldbutton">Wheat Field</button>
             <button id="buyranchbutton">Ranch</button>
+        </div>
+        <div id="buylandmark" style="display: none">
+            <div id="trainstation">
+
+            </div>
         </div>
         <script src="./script.js" type="module"></script>
 

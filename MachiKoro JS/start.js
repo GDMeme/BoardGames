@@ -1,6 +1,11 @@
 import { Player } from './player.js'
 
+import { buy } from './shop.js';
+
+import { end } from './end.js'
+
 export function start(numberofplayers) {
+    numberofplayers = parseInt(numberofplayers);
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('startgametext').style.display = "inline";
     const players = [];
@@ -8,19 +13,45 @@ export function start(numberofplayers) {
         players.push(new Player());
     }
 
-    let playerCounter = 1;
+    let playerCounter = 0; // * * playerCounter is 0 indexed!!!
 
     document.getElementById('rolldicebutton').onclick = function () {
         document.getElementById('rolldicebutton').disabled = true;
-        document.getElementById('endturnbutton').disabled = false;
+        document.getElementById('endturnbutton').disabled = false; // add two dice possibility if train station unlocked
+        let rollNumber = Math.floor(Math.random() * 6 + 1); // generates number between 1 and 6 inclusive
+        document.querySelector('#rollnumber').innerHTML = 'You rolled a ' + rollNumber;
+        document.getElementById('rollnumber').style.display = "inline";
+        document.getElementById('buyestablishment').style.display = "inline";
     }
+
+
 
     document.getElementById('endturnbutton').onclick = function() {
         playerCounter++;
+        if (playerCounter === numberofplayers) {
+            playerCounter = 0;
+        }
+        document.querySelector('#playerturn').innerHTML = 'Player ' + (playerCounter + 1) + '\'s turn!';
         document.getElementById('rolldicebutton').disabled = false;
         document.getElementById('endturnbutton').disabled = true;
+        document.getElementById('rollnumber').style.display = "none";
+        
+        console.log(players[playerCounter].establishments);
+        for (let i = 0; i < 4; i++) {
+            players[playerCounter].landmarks[i] = true;
+        }
     }
     document.querySelector('#buywheatfieldbutton').addEventListener('click', () => buy(0));
 
     console.log(players);
+
+
+
+
+    document.getElementById('buywheatfieldbutton').onclick = function() { // * * wrong logic but just wanted to test
+            // check if winner
+        if (players[playerCounter].landmarks.every(v => v === true)) {
+            end();
+    }
+    }
 }
