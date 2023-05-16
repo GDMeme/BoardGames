@@ -7,7 +7,7 @@
 <div style="text-align: center">
     <h1 id="titletext">Welcome to Machi Koro!</h1>
 
-    <body>
+    <body style="background-color: #CCCCCC">
         <div id="beforegametext">
             <p>How many people will be playing?</p>
             <select id="numberofplayersselect">
@@ -20,13 +20,57 @@
                 <button id="submitplayersbutton" disabled>Submit</button>
             </p>
         </div>
-        <div style="text-align: left">
+        <div style="text-align: left; display: none" id="player1inventory" >
             <div>
                 <u>
                     <font size="6"> Player 1 </font>
                 </u>
             </div>
-            Player 1
+            <div id="wheatfield1">
+                Wheat Field:
+            </div>
+            <div id="ranch1">
+                Ranch:
+            </div>
+            <div id="bakery1">
+                Bakery:
+            </div>
+            <div id="cafe1">
+                Cafe:
+            </div>
+            <div id="conveniencestore1">
+                Convenience Store:
+            </div>
+            <div id="forest1">
+                Forest:
+            </div>
+            <div id="stadium1">
+                Stadium:
+            </div>
+            <div id="tvstation1">
+                TV Station:
+            </div>
+            <div id="businesscenter1">
+                Business Center:
+            </div>
+            <div id="cheesefactory1">
+                Cheese Factory:
+            </div>
+            <div id="furniturefactory1">
+                Furniture Factory:
+            </div>
+            <div id="mine1">
+                Mine:
+            </div>
+            <div id="familyrestaurant1">
+                Family Restaurant:
+            </div>
+            <div id="appleorchard1">
+                Apple Orchard:
+            </div>
+            <div id="fruitandvegetablemarket1">
+                Fruit and Vegetable Market:
+            </div>
         </div>
         <div id="startgametext" style="display: none">
             <p>
@@ -35,8 +79,11 @@
             </div>
             </p>
             <p>
-                <button id="rolldicebutton">
-                    Click here to roll the dice!
+                <button id="roll1dicebutton">
+                    Click here to roll 1 dice!
+                </button>
+                <button id="roll2dicebutton" disabled>
+                    Click here to roll 2 dice!
                 </button>
             </p>
             <p>
@@ -44,22 +91,36 @@
                 You rolled a
             </div>
             </p>
-            <p>
-                <button id="endturnbutton" disabled>
-                    End turn
-                </button>
-            </p>
         </div>
         <div id="buyestablishment" style="display: none">
-            What would you like to buy?
+            <div>
+                <p>
+                    What would you like to buy?
+                </p>
+            </div>
             <button id="buywheatfieldbutton">Wheat Field</button>
             <button id="buyranchbutton">Ranch</button>
+            <button id="buybakerybutton">Bakery</button>
+            <button id="buycafebutton">Cafe</button>
+            <button id="buyconveniencestorebutton">Convenience Store</button>
+            <button id="buyforestbutton">Forest</button>
+            <button id="buystadiumbutton">Stadium</button>
+            <button id="buytvstationbutton">TV Station</button>
+            <button id="buybusinesscenterbutton">Business Center</button>
+            <button id="buycheesefactorybutton">Cheese Factory</button>
+            <button id="buyfurniturefactorybutton">Furniture Factory</button>
+            <button id="buyminebutton">Mine</button>
         </div>
         <div id="buylandmark" style="display: none">
             <div id="trainstation">
 
             </div>
         </div>
+        <p>
+            <button id="endturnbutton" disabled style="display: none">
+                End turn
+            </button>
+        </p>
         <script src="./script.js" type="module"></script>
 
     </body>
