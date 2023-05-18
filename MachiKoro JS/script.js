@@ -8,8 +8,3 @@ document.getElementById('numberofplayersselect').onchange = function() {
 document.getElementById('submitplayersbutton').onclick = function() {
     start(document.getElementById('numberofplayersselect').value);
 }
-
-// (function() {
-//     console.log('hi!');
-
-// })();

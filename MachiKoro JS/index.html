@@ -8,119 +8,398 @@
     <h1 id="titletext">Welcome to Machi Koro!</h1>
 
     <body style="background-color: #CCCCCC">
-        <div id="beforegametext">
-            <p>How many people will be playing?</p>
-            <select id="numberofplayersselect">
-                <option disabled selected value="1"> --select an option -- </option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-            </select>
-            <p>
-                <button id="submitplayersbutton" disabled>Submit</button>
-            </p>
-        </div>
-        <div style="text-align: left; display: none" id="player1inventory" >
-            <div>
-                <u>
-                    <font size="6"> Player 1 </font>
-                </u>
-            </div>
-            <div id="wheatfield1">
-                Wheat Field:
-            </div>
-            <div id="ranch1">
-                Ranch:
-            </div>
-            <div id="bakery1">
-                Bakery:
-            </div>
-            <div id="cafe1">
-                Cafe:
-            </div>
-            <div id="conveniencestore1">
-                Convenience Store:
-            </div>
-            <div id="forest1">
-                Forest:
-            </div>
-            <div id="stadium1">
-                Stadium:
-            </div>
-            <div id="tvstation1">
-                TV Station:
-            </div>
-            <div id="businesscenter1">
-                Business Center:
-            </div>
-            <div id="cheesefactory1">
-                Cheese Factory:
-            </div>
-            <div id="furniturefactory1">
-                Furniture Factory:
-            </div>
-            <div id="mine1">
-                Mine:
-            </div>
-            <div id="familyrestaurant1">
-                Family Restaurant:
-            </div>
-            <div id="appleorchard1">
-                Apple Orchard:
-            </div>
-            <div id="fruitandvegetablemarket1">
-                Fruit and Vegetable Market:
-            </div>
-        </div>
-        <div id="startgametext" style="display: none">
-            <p>
-            <div id="playerturn">
-                Player 1's turn!
-            </div>
-            </p>
-            <p>
-                <button id="roll1dicebutton">
-                    Click here to roll 1 dice!
-                </button>
-                <button id="roll2dicebutton" disabled>
-                    Click here to roll 2 dice!
-                </button>
-            </p>
-            <p>
-            <div id="rollnumber" style="display: none">
-                You rolled a
-            </div>
-            </p>
-        </div>
-        <div id="buyestablishment" style="display: none">
-            <div>
+        <div id="entiregame">
+            <div id="beforegametext">
+                <p>How many people will be playing?</p>
+                <select id="numberofplayersselect">
+                    <option disabled selected value="1"> --select an option -- </option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
                 <p>
-                    What would you like to buy?
+                    <button id="submitplayersbutton" disabled>Submit</button>
                 </p>
             </div>
-            <button id="buywheatfieldbutton">Wheat Field</button>
-            <button id="buyranchbutton">Ranch</button>
-            <button id="buybakerybutton">Bakery</button>
-            <button id="buycafebutton">Cafe</button>
-            <button id="buyconveniencestorebutton">Convenience Store</button>
-            <button id="buyforestbutton">Forest</button>
-            <button id="buystadiumbutton">Stadium</button>
-            <button id="buytvstationbutton">TV Station</button>
-            <button id="buybusinesscenterbutton">Business Center</button>
-            <button id="buycheesefactorybutton">Cheese Factory</button>
-            <button id="buyfurniturefactorybutton">Furniture Factory</button>
-            <button id="buyminebutton">Mine</button>
-        </div>
-        <div id="buylandmark" style="display: none">
-            <div id="trainstation">
-
+            <div style="justify-content: space-between; display: none; margin: 0px 150px" id="player12inventory">
+                <div>
+                    <div>
+                        <u>
+                            <font size="6"> Player 1 </font>
+                        </u>
+                    </div>
+                    <div id="balance1">
+                        <font size="5">
+                            Balance: 0
+                        </font>
+                    </div>
+                    <div id="wheatfield1">
+                        Wheat Field: 1
+                    </div>
+                    <div id="ranch1">
+                        Ranch: 0
+                    </div>
+                    <div id="bakery1">
+                        Bakery: 1
+                    </div>
+                    <div id="cafe1">
+                        Cafe: 0
+                    </div>
+                    <div id="conveniencestore1">
+                        Convenience Store: 0
+                    </div>
+                    <div id="forest1">
+                        Forest: 0
+                    </div>
+                    <div id="stadium1">
+                        Stadium: 0
+                    </div>
+                    <div id="tvstation1">
+                        TV Station: 0
+                    </div>
+                    <div id="businesscenter1">
+                        Business Center: 0
+                    </div>
+                    <div id="cheesefactory1">
+                        Cheese Factory: 0
+                    </div>
+                    <div id="furniturefactory1">
+                        Furniture Factory: 0
+                    </div>
+                    <div id="mine1">
+                        Mine: 0
+                    </div>
+                    <div id="familyrestaurant1">
+                        Family Restaurant: 0
+                    </div>
+                    <div id="appleorchard1">
+                        Apple Orchard: 0
+                    </div>
+                    <div id="fruitandvegetablemarket1">
+                        Fruit and Vegetable Market: 0
+                    </div>
+                    <p></p>
+                    <div id="trainstation1">
+                        Train Station: Locked
+                    </div>
+                    <div id="shoppingmall1">
+                        Shopping Mall: Locked
+                    </div>
+                    <div id="amusementpark1">
+                        Amusement Park: Locked
+                    </div>
+                    <div id="radiotower1">
+                        Radio Tower: Locked
+                    </div>
+                </div>
+                <div>
+                    <div id="startgametext" style="display: none">
+                        <p>
+                        <div id="playerturn">
+                            Player 1's turn!
+                        </div>
+                        </p>
+                        <p>
+                        <div>
+                            <input type="checkbox" id="roll2dicecheckbox" disabled>
+                            Click here to roll 2 dice instead!
+                            </input>
+                        </div>
+                        </p>
+                        <p>
+                        <div>
+                            <button id="rolldicebutton">
+                                Click here to roll the dice!
+                            </button>
+                        </div>
+                        </p>
+                        <p>
+                        <div id="rollnumber" style="display: none">
+                            You rolled a
+                        </div>
+                        </p>
+                    </div>
+                    <div id="buysomething" style="display: none">
+                        <div>
+                            <p>
+                                What would you like to buy?
+                            </p>
+                        </div>
+                        <div>
+                            <u>
+                                Establishments:
+                            </u>
+                        </div>
+                        <div>
+                            <p>
+                                <button id="buywheatfieldbutton">Wheat Field</button>
+                                <button id="buyranchbutton">Ranch</button>
+                                <button id="buybakerybutton">Bakery</button>
+                                <button id="buycafebutton">Cafe</button>
+                                <button id="buyconveniencestorebutton">Convenience Store</button>
+                                <button id="buyforestbutton">Forest</button>
+                            </p>
+                        </div>
+                        <div>
+                            <p>
+                                <button id="buystadiumbutton">Stadium</button>
+                                <button id="buytvstationbutton">TV Station</button>
+                                <button id="buybusinesscenterbutton">Business Center</button>
+                            </p>
+                        </div>
+                        <div>
+                            <p>
+                                <button id="buycheesefactorybutton">Cheese Factory</button>
+                                <button id="buyfurniturefactorybutton">Furniture Factory</button>
+                                <button id="buyminebutton">Mine</button>
+                                <button id="buyfamilyrestaurantbutton">Family Restaurant</button>
+                                <button id="buyappleorchardbutton">Apple Orchard</button>
+                                <button id="buyfruitandvegetablemarketbutton">Fruit and Vegetable Market</button>
+                            </p>
+                        </div>
+                        <div>
+                            <font size="6">
+                                OR
+                            </font>
+                        </div>
+                        <div>
+                            <u>
+                                Landmarks
+                            </u>
+                        </div>
+                        <div>
+                            <p>
+                                <button id="buytrainstationbutton">Train Station</button>
+                                <button id="buyshoppingmallbutton">Shopping Mall</button>
+                                <button id="buyamusementparkbutton">Amusement Park</button>
+                                <button id="buyradiotowerbutton">Radio Tower</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        <u>
+                            <font size="6"> Player 2 </font>
+                        </u>
+                    </div>
+                    <div id="balance2">
+                        <font size="5">
+                            Balance: 0
+                        </font>
+                    </div>
+                    <div id="wheatfield2">
+                        Wheat Field: 1
+                    </div>
+                    <div id="ranch2">
+                        Ranch: 0
+                    </div>
+                    <div id="bakery2">
+                        Bakery: 1
+                    </div>
+                    <div id="cafe2">
+                        Cafe: 0
+                    </div>
+                    <div id="conveniencestore2">
+                        Convenience Store: 0
+                    </div>
+                    <div id="forest2">
+                        Forest: 0
+                    </div>
+                    <div id="stadium2">
+                        Stadium: 0
+                    </div>
+                    <div id="tvstation2">
+                        TV Station: 0
+                    </div>
+                    <div id="businesscenter2">
+                        Business Center: 0
+                    </div>
+                    <div id="cheesefactory2">
+                        Cheese Factory: 0
+                    </div>
+                    <div id="furniturefactory2">
+                        Furniture Factory: 0
+                    </div>
+                    <div id="mine2">
+                        Mine: 0
+                    </div>
+                    <div id="familyrestaurant2">
+                        Family Restaurant: 0
+                    </div>
+                    <div id="appleorchard2">
+                        Apple Orchard: 0
+                    </div>
+                    <div id="fruitandvegetablemarket2">
+                        Fruit and Vegetable Market: 0
+                    </div>
+                    <p></p>
+                    <div id="trainstation2">
+                        Train Station: Locked
+                    </div>
+                    <div id="shoppingmall2">
+                        Shopping Mall: Locked
+                    </div>
+                    <div id="amusementpark2">
+                        Amusement Park: Locked
+                    </div>
+                    <div id="radiotower2">
+                        Radio Tower: Locked
+                    </div>
+                </div>
+            </div>
+            <div style="justify-content: space-between; display: none; margin: 20px 150px" id="player34inventory">
+                <div id="player3inventory" style="display: none">
+                    <div>
+                        <u>
+                            <font size="6"> Player 3 </font>
+                        </u>
+                    </div>
+                    <div id="balance3">
+                        <font size="5">
+                            Balance: 0
+                        </font>
+                    </div>
+                    <div id="wheatfield3">
+                        Wheat Field: 1
+                    </div>
+                    <div id="ranch3">
+                        Ranch: 0
+                    </div>
+                    <div id="bakery3">
+                        Bakery: 1
+                    </div>
+                    <div id="cafe3">
+                        Cafe: 0
+                    </div>
+                    <div id="conveniencestore3">
+                        Convenience Store: 0
+                    </div>
+                    <div id="forest3">
+                        Forest: 0
+                    </div>
+                    <div id="stadium3">
+                        Stadium: 0
+                    </div>
+                    <div id="tvstation3">
+                        TV Station: 0
+                    </div>
+                    <div id="businesscenter3">
+                        Business Center: 0
+                    </div>
+                    <div id="cheesefactory3">
+                        Cheese Factory: 0
+                    </div>
+                    <div id="furniturefactory3">
+                        Furniture Factory: 0
+                    </div>
+                    <div id="mine3">
+                        Mine: 0
+                    </div>
+                    <div id="familyrestaurant3">
+                        Family Restaurant: 0
+                    </div>
+                    <div id="appleorchard3">
+                        Apple Orchard: 0
+                    </div>
+                    <div id="fruitandvegetablemarket3">
+                        Fruit and Vegetable Market: 0
+                    </div>
+                    <p></p>
+                    <div id="trainstation3">
+                        Train Station: Locked
+                    </div>
+                    <div id="shoppingmall3">
+                        Shopping Mall: Locked
+                    </div>
+                    <div id="amusementpark3">
+                        Amusement Park: Locked
+                    </div>
+                    <div id="radiotower3">
+                        Radio Tower: Locked
+                    </div>
+                </div>
+                <div>
+                    <p>
+                        <button id="endturnbutton" disabled style="display: none">
+                            <font size="6">
+                                End Turn
+                            </font>
+                        </button>
+                    </p>
+                </div>
+                <div id="player4inventory" style="visibility: hidden">
+                    <div>
+                        <u>
+                            <font size="6"> Player 4 </font>
+                        </u>
+                    </div>
+                    <div id="balance4">
+                        <font size="5">
+                            Balance: 0
+                        </font>
+                    </div>
+                    <div id="wheatfield4">
+                        Wheat Field: 1
+                    </div>
+                    <div id="ranch4">
+                        Ranch: 0
+                    </div>
+                    <div id="bakery4">
+                        Bakery: 1
+                    </div>
+                    <div id="cafe4">
+                        Cafe: 0
+                    </div>
+                    <div id="conveniencestore4">
+                        Convenience Store: 0
+                    </div>
+                    <div id="forest4">
+                        Forest: 0
+                    </div>
+                    <div id="stadium4">
+                        Stadium: 0
+                    </div>
+                    <div id="tvstation4">
+                        TV Station: 0
+                    </div>
+                    <div id="businesscenter4">
+                        Business Center: 0
+                    </div>
+                    <div id="cheesefactory4">
+                        Cheese Factory: 0
+                    </div>
+                    <div id="furniturefactory4">
+                        Furniture Factory: 0
+                    </div>
+                    <div id="mine4">
+                        Mine: 0
+                    </div>
+                    <div id="familyrestaurant4">
+                        Family Restaurant: 0
+                    </div>
+                    <div id="appleorchard4">
+                        Apple Orchard: 0
+                    </div>
+                    <div id="fruitandvegetablemarket4">
+                        Fruit and Vegetable Market: 0
+                    </div>
+                    <p></p>
+                    <div id="trainstation4">
+                        Train Station: Locked
+                    </div>
+                    <div id="shoppingmall4">
+                        Shopping Mall: Locked
+                    </div>
+                    <div id="amusementpark4">
+                        Amusement Park: Locked
+                    </div>
+                    <div id="radiotower4">
+                        Radio Tower: Locked
+                    </div>
+                </div>
             </div>
         </div>
-        <p>
-            <button id="endturnbutton" disabled style="display: none">
-                End turn
-            </button>
-        </p>
         <script src="./script.js" type="module"></script>
 
     </body>
