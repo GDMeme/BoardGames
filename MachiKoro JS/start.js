@@ -34,16 +34,13 @@ export function start(numberofplayers) {
     document.getElementById('startgametext').style.display = "inline";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
-
+    document.getElementById('player34inventory').style.display = "flex";
     if (numberofplayers === 4) {
-        document.getElementById('player34inventory').style.display = "flex";
         document.getElementById('player3inventory').style.display = "inline";
         document.getElementById('player4inventory').style.display = "inline";
     } else if (numberofplayers === 3) {
-        document.getElementById('player34inventory').style.display = "flex";
         document.getElementById('player3inventory').style.display = "inline";
     } else {
-        document.getElementById('player34inventory').style.display = "flex";
         document.getElementById('player3inventory').style.visibility = "hidden";
         document.getElementById('player4inventory').style.visibility = "hidden";
         document.getElementById('endturn').style.display = "inline";
@@ -70,7 +67,7 @@ export function start(numberofplayers) {
 
         // buy establishment/landmark
         document.getElementById('buysomething').style.display = "inline";
-        enableShop(players[playerCounter]);
+        enableShop(players[playerCounter], buildings);
     }
 
     const buttonIDs = buildings.map(building => building.name);

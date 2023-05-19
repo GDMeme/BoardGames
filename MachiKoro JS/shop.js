@@ -1,10 +1,13 @@
 import { end } from './end.js'
 
+const currentBuildings = Array(12).fill(6); // not including purple establishments
+
 export function buy(building_num, player, playerCounter, buildings) {// * * 15 16 17 18 are the landmarks
     const { name, displayName, cost } = buildings[building_num];
     player.balance -= cost;
     if (building_num < 15) { // bought an establishment
-        // TODO: limit on total number of each establishment
+        // TODO: limit on total number of each establishment (CHECK IF THIS WORKS)
+        currentBuildings[building_num]--;
         player.establishments[building_num]++;
         document.querySelector(`#${name}${playerCounter + 1}`).innerHTML = `${displayName}: ${player.establishments[building_num]}`;
     } else { // bought a landmark
@@ -23,25 +26,13 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
     document.querySelectorAll('.shop').forEach(button => button.disabled = true);
 }
 
-export function enableShop(player) {
-    document.getElementById('buywheatfieldbutton').disabled = player.balance < 1;
-    document.getElementById('buyranchbutton').disabled = player.balance < 1;
-    document.getElementById('buybakerybutton').disabled = player.balance < 1;
-    document.getElementById('buycafebutton').disabled = player.balance < 2;
-    document.getElementById('buyconveniencestorebutton').disabled = player.balance < 2;
-    document.getElementById('buyforestbutton').disabled = player.balance < 3;
-    document.getElementById('buystadiumbutton').disabled = player.balance < 6;
-    document.getElementById('buytvstationbutton').disabled = player.balance < 7;
-    document.getElementById('buybusinesscenterbutton').disabled = player.balance < 8;
-    document.getElementById('buycheesefactorybutton').disabled = player.balance < 5;
-    document.getElementById('buyfurniturefactorybutton').disabled = player.balance < 3;
-    document.getElementById('buyminebutton').disabled = player.balance < 6;
-    document.getElementById('buyfamilyrestaurantbutton').disabled = player.balance < 3;
-    document.getElementById('buyappleorchardbutton').disabled = player.balance < 3;
-    document.getElementById('buyfruitandvegetablemarketbutton').disabled = player.balance < 2;
-
-    document.getElementById('buytrainstationbutton').disabled = player.balance < 4 || player.landmarks[0];
-    document.getElementById('buyshoppingmallbutton').disabled = player.balance < 10 || player.landmarks[1];
-    document.getElementById('buyamusementparkbutton').disabled = player.balance < 16 || player.landmarks[2];
-    document.getElementById('buyradiotowerbutton').disabled = player.balance < 22 || player.landmarks[3];
+export function enableShop(player, buildings) {
+    for (let i = 0; i < 15; i++) { // establishments
+        const { name, cost } = buildings[i];
+        document.getElementById(`buy${name}button`).disabled = player.balance < cost || currentBuildings[i] === 0;
+    }
+    for (let i = 15; i < 19; i++) { // landmarks
+        const { name, cost } = buildings[i];
+        document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.landmarks[i - 15];
+    }
 }
