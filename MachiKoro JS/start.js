@@ -4,6 +4,28 @@ import { buy, enableShop } from './shop.js';
 
 import { income } from './income.js';
 
+const buildings = [
+    {name: 'wheatfield', displayName: 'Wheat Field', cost: 1},
+    {name: 'ranch', displayName: 'Ranch', cost: 1},
+    {name: 'bakery', displayName: 'Bakery', cost: 1},
+    {name: 'cafe', displayName: 'Cafe', cost: 2},
+    {name: 'conveniencestore', displayName: 'Convenience Store', cost: 2},
+    {name: 'forest', displayName: 'Forest', cost: 3},
+    {name: 'stadium', displayName: 'Stadium', cost: 6},
+    {name: 'tvstation', displayName: 'TV Station', cost: 7},
+    {name: 'businesscenter', displayName: 'Business Center', cost: 8},
+    {name: 'cheesefactory', displayName: 'Cheese Factory', cost: 5},
+    {name: 'furniturefactory', displayName: 'Furniture Factory', cost: 3},
+    {name: 'mine', displayName: 'Mine', cost: 6},
+    {name: 'familyrestaurant', displayName: 'Family Restaurant', cost: 3},
+    {name: 'appleorchard', displayName: 'Apple Orchard', cost: 3},
+    {name: 'fruitandvegetablemarket', displayName: 'Fruit and Vegetable Market', cost: 2},
+    {name: 'trainstation', displayName: 'Train Station', cost: 4},
+    {name: 'shoppingmall', displayName: 'Shopping Mall', cost: 10},
+    {name: 'amusementpark', displayName: 'Amusement Park', cost: 16},
+    {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
+]
+
 // TODO: implement income (+ business center), landmark interactions, limit on number of establishments
 
 export function start(numberofplayers) {
@@ -12,6 +34,7 @@ export function start(numberofplayers) {
     document.getElementById('startgametext').style.display = "inline";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
+
     if (numberofplayers === 4) {
         document.getElementById('player34inventory').style.display = "flex";
         document.getElementById('player3inventory').style.display = "inline";
@@ -19,8 +42,13 @@ export function start(numberofplayers) {
     } else if (numberofplayers === 3) {
         document.getElementById('player34inventory').style.display = "flex";
         document.getElementById('player3inventory').style.display = "inline";
-
+    } else {
+        document.getElementById('player34inventory').style.display = "flex";
+        document.getElementById('player3inventory').style.visibility = "hidden";
+        document.getElementById('player4inventory').style.visibility = "hidden";
+        document.getElementById('endturn').style.display = "inline";
     }
+
     const players = [];
     for (let i = 0; i < numberofplayers; i++) {
         players.push(new Player());
@@ -42,53 +70,16 @@ export function start(numberofplayers) {
 
         // buy establishment/landmark
         document.getElementById('buysomething').style.display = "inline";
-        enableShop(players[playerCounter].balance);
+        enableShop(players[playerCounter]);
     }
 
-    document.getElementById('buywheatfieldbutton').onclick = function () {
-        buy(0, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyranchbutton').onclick = function () {
-        buy(1, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buybakerybutton').onclick = function () {
-        buy(2, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buycafebutton').onclick = function () {
-        buy(3, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyconveniencestorebutton').onclick = function () {
-        buy(4, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyforestbutton').onclick = function () {
-        buy(5, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buystadiumbutton').onclick = function () {
-        buy(6, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buytvstationbutton').onclick = function () {
-        buy(7, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buybusinesscenterbutton').onclick = function () {
-        buy(8, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buycheesefactorybutton').onclick = function () {
-        buy(9, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyfurniturefactorybutton').onclick = function () {
-        buy(10, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyminebutton').onclick = function () {
-        buy(11, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyfamilyrestaurantbutton').onclick = function () {
-        buy(12, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyappleorchardbutton').onclick = function () {
-        buy(13, players[playerCounter], playerCounter);
-    }
-    document.getElementById('buyfruitandvegetablemarketbutton').onclick = function () {
-        buy(14, players[playerCounter], playerCounter);
+    const buttonIDs = buildings.map(building => building.name);
+
+    for (let i = 0; i < buttonIDs.length; i++) {
+      const id = buttonIDs[i];
+      document.getElementById(`buy${id}button`).onclick = function() {
+        buy(i, players[playerCounter], playerCounter, buildings);
+      }
     }
 
     document.getElementById('endturnbutton').onclick = function() {
@@ -103,8 +94,7 @@ export function start(numberofplayers) {
         document.getElementById('roll2dicecheckbox').checked = false;
         document.getElementById('buysomething').style.display = "none";
         
-        for (let i = 0; i < 4; i++) {
-            players[playerCounter].landmarks[i] = true;
-        }
+        // check landmarks
+        document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
     }
 }

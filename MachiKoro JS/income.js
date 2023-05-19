@@ -1,4 +1,22 @@
+// 
+
 export function income(roll, players, playerCounter) {
+    // red activate
+    if (roll === 3) {
+
+    }
+    if (roll === 10) {
+
+    }
+
+    // green and blue activate
+
+    // 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12
+
+    // purple activate
+
+    // 6, 7, 8
+
     if (roll === 1) {
 
     } else if (roll === 2) {
