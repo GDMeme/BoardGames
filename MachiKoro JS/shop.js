@@ -6,7 +6,6 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
     const { name, displayName, cost } = buildings[building_num];
     player.balance -= cost;
     if (building_num < 15) { // bought an establishment
-        // TODO: limit on total number of each establishment (CHECK IF THIS WORKS)
         currentBuildings[building_num]--;
         player.establishments[building_num]++;
         document.querySelector(`#${name}${playerCounter + 1}`).innerHTML = `${displayName}: ${player.establishments[building_num]}`;
@@ -29,7 +28,11 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
 export function enableShop(player, buildings) {
     for (let i = 0; i < 15; i++) { // establishments
         const { name, cost } = buildings[i];
-        document.getElementById(`buy${name}button`).disabled = player.balance < cost || currentBuildings[i] === 0;
+        if (i === 6 || i === 7 || i === 8) { // 6, 7, 8 are purple establishments
+            document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.establishments[i] === 1;
+        } else {
+            document.getElementById(`buy${name}button`).disabled = player.balance < cost || currentBuildings[i] === 0;
+        }
     }
     for (let i = 15; i < 19; i++) { // landmarks
         const { name, cost } = buildings[i];
