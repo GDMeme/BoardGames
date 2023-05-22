@@ -16,13 +16,16 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
         // check if winner
         if (player.landmarks.every(v => v === true)) {
             document.getElementById('entiregame').style.display = "none";
-            end();
+            end(playerCounter);
         }
     }
     document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5"> Balance: ${player.balance} </font>`;
 
     // disable all shop buttons after buying something
     document.querySelectorAll('.shop').forEach(button => button.disabled = true);
+
+    // disable the reroll button
+    document.getElementById('rerollbutton').disabled = true;
 }
 
 export function enableShop(player, buildings) {

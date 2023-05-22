@@ -1,4 +1,4 @@
-// 
+// remember to include shopping mall
 
 export function income(roll, players, playerCounter) {
     // red activate

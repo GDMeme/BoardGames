@@ -1,3 +1,3 @@
-export function end() {
-    document.querySelector('#titletext').innerHTML = 'Thanks for playing!';
+export function end(playerCounter) {
+    document.querySelector('#titletext').innerHTML = `<p> <div> Player ${playerCounter + 1} wins! </div> </p> <div> Thanks for playing! </div>`;
 }

@@ -26,7 +26,40 @@ const buildings = [
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
 ]
 
-// TODO: implement income (+ business center), landmark interactions, limit on number of establishments
+// TODO: implement income (+ business center), shopping mall interaction
+
+function playerTurn(players, playerCounter, flag) {
+    document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
+    document.getElementById('endturnbutton').disabled = false; // enable the end turn button
+    document.getElementById('roll2dicecheckbox').disabled = true;
+    if (players[playerCounter].landmarks[3] && flag) {
+        document.getElementById('rerollbutton').disabled = false; 
+    }
+    // rolling stuff
+    let rollNumber;
+    if (document.getElementById('roll2dicecheckbox').checked) {
+        let firstRoll = Math.floor(Math.random() * 6 + 1);
+        let secondRoll = Math.floor(Math.random() * 6 + 1);
+        firstRoll = 3;
+        secondRoll = 3;
+        rollNumber = firstRoll + secondRoll;
+        if (firstRoll === secondRoll && players[playerCounter].landmarks[2]) {
+            document.getElementById('rolldoubles').style.display = "inline";
+        }
+        document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${rollNumber}! </u>`;
+    } else {
+        rollNumber = Math.floor(Math.random() * 6 + 1);
+        document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${rollNumber}! </u>`;
+    }
+    document.getElementById('rollnumber').style.display = "inline";
+
+    // everyone collects income
+    income(rollNumber, players, playerCounter);
+
+    // buy establishment/landmark
+    document.getElementById('buysomething').style.display = "inline";
+    enableShop(players[playerCounter], buildings);
+}
 
 export function start(numberofplayers) {
     numberofplayers = parseInt(numberofplayers); // was a string, turn to int so can use comparison
@@ -36,10 +69,10 @@ export function start(numberofplayers) {
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
     if (numberofplayers === 4) {
-        document.getElementById('player3inventory').style.display = "inline";
-        document.getElementById('player4inventory').style.display = "inline";
+        document.getElementById('player3inventory').style.visibility = "visible";
+        document.getElementById('player4inventory').style.visibility = "visible";
     } else if (numberofplayers === 3) {
-        document.getElementById('player3inventory').style.display = "inline";
+        document.getElementById('player3inventory').style.visibility = "visible";
     } else {
         document.getElementById('player3inventory').style.visibility = "hidden";
         document.getElementById('player4inventory').style.visibility = "hidden";
@@ -53,21 +86,13 @@ export function start(numberofplayers) {
 
     let playerCounter = 0; // * * playerCounter is 0 indexed!!!
 
+    document.getElementById('rerollbutton').onclick = function () {
+        document.getElementById('rerollbutton').disabled = true;
+        playerTurn(players, playerCounter, false);
+    }
+
     document.getElementById('rolldicebutton').onclick = function () {
-        document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
-        document.getElementById('endturnbutton').disabled = false; // enable the end turn button
-
-        // rolling stuff
-        let rollNumber = document.getElementById('roll2dicecheckbox').checked ? Math.floor(Math.random() * 12 + 1) : Math.floor(Math.random() * 6 + 1);
-        document.querySelector('#rollnumber').innerHTML = '<u> You rolled a ' + rollNumber + '! </u>';
-        document.getElementById('rollnumber').style.display = "inline";
-
-        // everyone collects income
-        income(rollNumber, players, playerCounter);
-
-        // buy establishment/landmark
-        document.getElementById('buysomething').style.display = "inline";
-        enableShop(players[playerCounter], buildings);
+        playerTurn(players, playerCounter, true);
     }
 
     const buttonIDs = buildings.map(building => building.name);
@@ -80,17 +105,22 @@ export function start(numberofplayers) {
     }
 
     document.getElementById('endturnbutton').onclick = function() {
-        playerCounter++;
+        if (document.getElementById('rolldoubles').style.display != "inline") { // amusement park did not activate
+            playerCounter++;
+        }
         if (playerCounter === numberofplayers) {
             playerCounter = 0;
         }
-        document.querySelector('#playerturn').innerHTML = 'Player ' + (playerCounter + 1) + '\'s turn!';
+        document.querySelector('#playerturn').innerHTML = `Player ${playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
         document.getElementById('rolldicebutton').disabled = false;
         document.getElementById('endturnbutton').disabled = true;
         document.getElementById('rollnumber').style.display = "none";
         document.getElementById('roll2dicecheckbox').checked = false;
         document.getElementById('buysomething').style.display = "none";
-        
+        document.getElementById('rolldoubles').style.display = "none";
+        document.getElementById('roll2dicecheckbox').style.display = "inline";
+        document.getElementById('rerollbutton').disabled = true;
+
         // check landmarks
         document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
     }
