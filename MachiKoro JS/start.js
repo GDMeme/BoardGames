@@ -40,8 +40,6 @@ function playerTurn(players, playerCounter, flag) {
     if (document.getElementById('roll2dicecheckbox').checked) {
         let firstRoll = Math.floor(Math.random() * 6 + 1);
         let secondRoll = Math.floor(Math.random() * 6 + 1);
-        firstRoll = 3;
-        secondRoll = 3;
         rollNumber = firstRoll + secondRoll;
         if (firstRoll === secondRoll && players[playerCounter].landmarks[2]) {
             document.getElementById('rolldoubles').style.display = "inline";
