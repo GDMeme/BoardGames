@@ -27,7 +27,7 @@ function exchangeCoins(player, targetPlayer, amount) {
         targetPlayer.balance -= amount;
         player.balance += amount;
     } else {
-        player.balance += player.balance;
+        player.balance += targetPlayer.balance;
         targetPlayer.balance = 0;
     }
 }
@@ -36,7 +36,8 @@ export function income(roll, players, playerCounter, buildings) {
     if (roll === 3 || roll === 10) {
         redActivate(players, playerCounter, roll === 3);
     } else if (roll === 6) {
-        if (players[playerCounter].establishments[6]) {
+        if (players[playerCounter].establishments[6]) { 
+            // TODO: text that money was taken
             let currentPlayer = 0;
             for (const player of players) {
                 if (currentPlayer !== playerCounter) {  
@@ -46,9 +47,27 @@ export function income(roll, players, playerCounter, buildings) {
             }
         }
         if (players[playerCounter].establishments[7]) {
-            // TODO: enable a button to target someone
-            
-            exchangeCoins(players[playerCounter], targetPlayer, 5)
+            document.getElementById('tvplayerbuttons').style.display = "inline";
+            document.getElementById('endturnbutton').disabled = true;
+            document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
+            for (let i = 1; i <= players.length; i++) {     
+                document.getElementById(`tvplayer${i}button`).style.display = "inline";
+                document.getElementById(`tvplayer${i}button`).onclick = function() {
+                    // TODO: text that money was exchanged
+                    exchangeCoins(players[playerCounter], players[i - 1], 5); // since i is not 0 indexed
+
+                    // update balances
+                    let counter = 1;
+                    for (const player of players) {
+                        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5"> Balance: ${player.balance} </font>`;
+                        counter++;
+                    }
+
+                    document.getElementById('endturnbutton').disabled = false;
+                    document.getElementById('tvplayerbuttons').style.display = "none";
+                }
+            }
+
         }
         if (players[playerCounter].establishments[8]) {
             // TODO: enable a button to target someone
@@ -85,6 +104,7 @@ export function income(roll, players, playerCounter, buildings) {
                 }
             }
         }
+        document.querySelector(`#balance${currentPlayer + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
         currentPlayer++;
     }
 }
