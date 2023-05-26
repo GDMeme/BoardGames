@@ -74,7 +74,6 @@ export function start(numberofplayers) {
     } else {
         document.getElementById('player3inventory').style.visibility = "hidden";
         document.getElementById('player4inventory').style.visibility = "hidden";
-        document.getElementById('endturn').style.display = "inline";
     }
 
     const players = [];
