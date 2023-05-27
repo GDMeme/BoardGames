@@ -95,10 +95,10 @@ export function start(numberofplayers) {
     const buttonIDs = buildings.map(building => building.name);
 
     for (let i = 0; i < buttonIDs.length; i++) {
-      const id = buttonIDs[i];
-      document.getElementById(`buy${id}button`).onclick = function() {
-        buy(i, players[playerCounter], playerCounter, buildings);
-      }
+        const id = buttonIDs[i];
+        document.getElementById(`buy${id}button`).onclick = function() {
+            buy(i, players[playerCounter], playerCounter, buildings);
+        }
     }
 
     document.getElementById('endturnbutton').onclick = function() {
