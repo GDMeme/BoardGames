@@ -26,13 +26,17 @@ const buildings = [
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
 ]
 
+const buttonIDs = buildings.map(building => building.name);
+
 // TODO: implement income (+ business center), shopping mall interaction
 
 function playerTurn(players, playerCounter, flag) {
     document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
     document.getElementById('roll2dicecheckbox').disabled = true;
-    if (players[playerCounter].landmarks[3] && flag) {
+
+    let currentPlayer = players[playerCounter];
+    if (currentPlayer.landmarks[3] && flag) {
         document.getElementById('rerollbutton').disabled = false; 
     }
     // rolling stuff
@@ -41,7 +45,7 @@ function playerTurn(players, playerCounter, flag) {
         let firstRoll = Math.floor(Math.random() * 6 + 1);
         let secondRoll = Math.floor(Math.random() * 6 + 1);
         rollNumber = firstRoll + secondRoll;
-        if (firstRoll === secondRoll && players[playerCounter].landmarks[2]) {
+        if (firstRoll === secondRoll && currentPlayer.landmarks[2]) {
             document.getElementById('rolldoubles').style.display = "inline";
         }
         document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${rollNumber}! </u>`;
@@ -55,8 +59,10 @@ function playerTurn(players, playerCounter, flag) {
     income(rollNumber, players, playerCounter, buildings);
 
     // buy establishment/landmark
-    document.getElementById('buysomething').style.display = "inline";
-    enableShop(players[playerCounter], buildings);
+    if (!(rollNumber === 6 && currentPlayer.establishments[8])) {
+        document.getElementById('buysomething').style.display = "inline";
+        enableShop(currentPlayer, buildings);
+    }
 }
 
 export function start(numberofplayers) {
@@ -92,12 +98,11 @@ export function start(numberofplayers) {
         playerTurn(players, playerCounter, true);
     }
 
-    const buttonIDs = buildings.map(building => building.name);
-
+    let currentPlayer = players[playerCounter];
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
-            buy(i, players[playerCounter], playerCounter, buildings);
+            buy(i, currentPlayer, playerCounter, buildings);
         }
     }
 
@@ -119,6 +124,6 @@ export function start(numberofplayers) {
         document.getElementById('rerollbutton').disabled = true;
 
         // check landmarks
-        document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
+        document.getElementById('roll2dicecheckbox').disabled = !currentPlayer.landmarks[0];
     }
 }
