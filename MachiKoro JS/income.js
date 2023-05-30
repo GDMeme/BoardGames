@@ -128,7 +128,9 @@ export function income(roll, players, playerCounter, buildings) {
                     document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
                     
                     currentPlayer.establishments[receiveIndex]++; // receiving
+                    document.querySelector(`#${buttonIDs[receiveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${currentPlayer.establishments[receiveIndex]}`;
                     targetPlayer.establishments[receiveIndex]--;
+                    document.querySelector(`#${buttonIDs[receiveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${targetPlayer.establishments[receiveIndex]}`;
 
                     document.getElementById('businesstext3').style.display = "none";
 
