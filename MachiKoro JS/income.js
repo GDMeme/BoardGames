@@ -1,3 +1,5 @@
+import { enableShop } from './shop.js'
+
 // TODO: remember to include shopping mall
 
 // TODO: remember to add/change html stuff
@@ -36,30 +38,34 @@ export function income(roll, players, playerCounter, buildings) {
     if (roll === 3 || roll === 10) {
         redActivate(players, playerCounter, roll === 3);
     } else if (roll === 6) {
-        if (players[playerCounter].establishments[6]) { 
+        let currentPlayer = players[playerCounter];
+        if (currentPlayer.establishments[6]) { 
             // TODO: text that money was taken
             let currentPlayer = 0;
             for (const player of players) {
                 if (currentPlayer !== playerCounter) {  
-                    exchangeCoins(players[playerCounter], player, 2)
+                    exchangeCoins(currentPlayer, player, 2)
                 }
                 currentPlayer++;
             }
         }
-        if (players[playerCounter].establishments[7]) {
+        if (currentPlayer.establishments[7]) {
             document.getElementById('tvplayertextbuttons').style.display = "inline";
             document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
-            for (let i = 1; i <= players.length; i++) {     
 
+            document.getElementById(`tvplayer3button`).style.display = players.length >= 3 ? "inline" : "none";
+            document.getElementById(`tvplayer4button`).style.display = players.length === 4 ? "inline" : "none";
+
+            for (let i = 1; i <= players.length; i++) {     
                 document.getElementById(`tvplayer${i}button`).onclick = function() {
                     // TODO: text that money was exchanged
-                    exchangeCoins(players[playerCounter], players[i - 1], 5); // since i is not 0 indexed
+                    exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
 
-                    // update balances
                     let counter = 1;
                     for (const player of players) {
-                        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
+                        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // update player balances
+                        document.getElementById(`tvplayer${counter}button`).disabled = false; // enable the player buttons for the next turn
                         counter++;
                     }
 
@@ -69,23 +75,68 @@ export function income(roll, players, playerCounter, buildings) {
             }
             document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // enable the button that you disabled (taking 5 coins from yourself)
         }
-        if (players[playerCounter].establishments[8]) {
-            document.getElementById('businessplayertextbutton').style.display = "inline";
+        if (currentPlayer.establishments[8]) {
+            const buttonIDs = buildings.map(building => building.name);
+            const displayNames = buildings.map(building => building.displayName);
+
+            document.getElementById('businesstextbuttons').style.display = "inline";
+
+            document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = true; // disable trading with yourself
-            // TODO: enable a button to target someone
 
-            // TODO: enable buttons to choose what to trade
-            players[playerCounter].establishments[giveIndex]--;
-            targetPlayer.establishments[giveIndex]++;
+            document.getElementById(`businessplayer3button`).style.display = players.length >= 3 ? "inline" : "none";
+            document.getElementById(`businessplayer4button`).style.display = players.length === 4 ? "inline" : "none";
+        
+            document.getElementById('businessplayerbuttons').style.display = "inline";
+            document.getElementById('businesstext1').style.display = "inline";
+            let targetPlayer;
+            let targetPlayerIndex;
+            for (let i = 1; i <= players.length; i++) {
+                document.getElementById(`businessplayer${i}button`).onclick = function() {
+                    targetPlayer = players[i - 1];
+                    targetPlayerIndex = i - 1; //* * targetPlayerIndex is 0 indexed
+
+                    document.getElementById('businesstext1').style.display = "none";
+                    document.getElementById('businesstext2').style.display = "inline";
+                    document.getElementById('businessplayerbuttons').style.display = "none";
+
+                    document.getElementById('receiveindex').style.display = "inline";
+                }
+            }
             
-            players[playerCounter].establishments[receiveIndex]++;
-            targetPlayer.establishments[receiveIndex]--;
+            let receiveIndex;
+            let giveIndex;
 
-            // change the buttons back to buying establishments
-            for (let i = 0; i < buttonIDs.length; i++) {
-                const id = buttonIDs[i];
-                document.getElementById(`buy${id}button`).onclick = function() {
-                    buy(i, players[playerCounter], playerCounter, buildings);
+            for (let i = 0; i < 15; i++) {
+                document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
+                    receiveIndex = i;
+
+                    document.getElementById('businesstext2').style.display = "none";
+                    document.getElementById('businesstext3').style.display = "inline";
+                    document.getElementById('receiveindex').style.display = "none";
+                    document.getElementById('giveindex').style.display = "inline";
+                }
+            }
+
+            for (let i = 0; i < 15; i++) {
+                document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
+                    giveIndex = i;
+
+                    currentPlayer.establishments[giveIndex]--; // giving away
+                    document.querySelector(`#${buttonIDs[giveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[giveIndex]}: ${currentPlayer.establishments[giveIndex]}`;
+                    targetPlayer.establishments[giveIndex]++;
+                    document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
+                    
+                    currentPlayer.establishments[receiveIndex]++; // receiving
+                    targetPlayer.establishments[receiveIndex]--;
+
+                    document.getElementById('businesstext3').style.display = "none";
+
+                    document.getElementById('giveindex').style.display = "none";
+
+                    // enable shop buttons
+                    document.getElementById('buysomething').style.display = "inline";
+                    enableShop(currentPlayer, buildings);
                 }
             }
             document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = true; // enable the button that you disabled (trading with yourself)
