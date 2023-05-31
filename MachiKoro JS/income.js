@@ -24,13 +24,24 @@ function redActivate(players, playerCounter, flag) { // if flag, rolled 3
     }
 }
 
-function exchangeCoins(player, targetPlayer, amount) {
+function exchangeCoins(player, targetPlayer, amount) { // returns the amount of coins exchanged
     if (targetPlayer.balance >= amount) {
         targetPlayer.balance -= amount;
         player.balance += amount;
+        return amount;
     } else {
+        let temp = targetPlayer.balance;
         player.balance += targetPlayer.balance;
         targetPlayer.balance = 0;
+        return temp;
+    }
+}
+
+function updateBalances(players) {
+    let counter = 1;
+    for (const player of players) {
+        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // update player balances
+        counter++;
     }
 }
 
@@ -41,39 +52,34 @@ export function income(roll, players, playerCounter, buildings) {
         let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
             // TODO: text that money was taken
-            let currentPlayer = 0;
+            let currentIndex = 0;
             for (const player of players) {
-                if (currentPlayer !== playerCounter) {  
-                    exchangeCoins(currentPlayer, player, 2)
+                if (currentIndex !== playerCounter) {  
+                    exchangeCoins(currentPlayer, player, 2);
                 }
-                currentPlayer++;
+                currentIndex++;
             }
+            updateBalances(players);
         }
         if (currentPlayer.establishments[7]) {
             document.getElementById('tvplayertextbuttons').style.display = "inline";
+            document.querySelector('#tvplayertext').innerHTML = "Who would you like to take 5 coins from?";
             document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
 
-            document.getElementById(`tvplayer3button`).style.display = players.length >= 3 ? "inline" : "none";
-            document.getElementById(`tvplayer4button`).style.display = players.length === 4 ? "inline" : "none";
-
             for (let i = 1; i <= players.length; i++) {     
                 document.getElementById(`tvplayer${i}button`).onclick = function() {
-                    // TODO: text that money was exchanged
-                    exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
-
-                    let counter = 1;
-                    for (const player of players) {
-                        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // update player balances
-                        document.getElementById(`tvplayer${counter}button`).disabled = false; // enable the player buttons for the next turn
-                        counter++;
-                    }
+                    
+                    // TODO: make sure that text that money was exchanged works
+                    let numberOfCoins = exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
+                    document.querySelector('#tvplayertext').innerHTML = `Player ${playerCounter + 1} received ${numberOfCoins} coins. Player ${i} lost ${numberOfCoins} coins.`;
+                    updateBalances(players);
 
                     document.getElementById('endturnbutton').disabled = false;
                     document.getElementById('tvplayertextbuttons').style.display = "none";
                 }
             }
-            document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // enable the button that you disabled (taking 5 coins from yourself)
+            document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
         }
         if (currentPlayer.establishments[8]) {
             const buttonIDs = buildings.map(building => building.name);
@@ -83,9 +89,6 @@ export function income(roll, players, playerCounter, buildings) {
 
             document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = true; // disable trading with yourself
-
-            document.getElementById(`businessplayer3button`).style.display = players.length >= 3 ? "inline" : "none";
-            document.getElementById(`businessplayer4button`).style.display = players.length === 4 ? "inline" : "none";
         
             document.getElementById('businessplayerbuttons').style.display = "inline";
             document.getElementById('businesstext1').style.display = "inline";
@@ -141,7 +144,7 @@ export function income(roll, players, playerCounter, buildings) {
                     enableShop(currentPlayer, buildings);
                 }
             }
-            document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = true; // enable the button that you disabled (trading with yourself)
+            document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
         }
     }
     let activated_buildings;
