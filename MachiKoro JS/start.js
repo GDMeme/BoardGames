@@ -66,7 +66,6 @@ function playerTurn(players, playerCounter, flag) {
 }
 
 export function start(numberofplayers) {
-    numberofplayers = parseInt(numberofplayers); // was a string, turn to int so can use comparison
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('startgametext').style.display = "inline";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
@@ -98,11 +97,10 @@ export function start(numberofplayers) {
         playerTurn(players, playerCounter, true);
     }
 
-    let currentPlayer = players[playerCounter];
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
-            buy(i, currentPlayer, playerCounter, buildings);
+            buy(i, players[playerCounter], playerCounter, buildings);
         }
     }
 
@@ -122,8 +120,9 @@ export function start(numberofplayers) {
         document.getElementById('rolldoubles').style.display = "none";
         document.getElementById('roll2dicecheckbox').style.display = "inline";
         document.getElementById('rerollbutton').disabled = true;
+        document.getElementById('stadiumtext').style.display = "none";
 
         // check landmarks
-        document.getElementById('roll2dicecheckbox').disabled = !currentPlayer.landmarks[0];
+        document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
     }
 }
