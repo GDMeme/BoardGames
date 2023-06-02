@@ -19,7 +19,7 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
             end(playerCounter);
         }
     }
-    document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5"> Balance: ${player.balance} </font>`;
+    document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5"> Balance: ${player.balance} </font>`; // since playerCounter is 0 indexed
 
     // disable all shop buttons after buying something
     document.querySelectorAll('.shop').forEach(button => button.disabled = true);
