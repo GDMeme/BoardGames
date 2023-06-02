@@ -51,15 +51,21 @@ export function income(roll, players, playerCounter, buildings) {
     } else if (roll === 6) {
         let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
-            // TODO: text that money was taken
+            
             let currentIndex = 0;
+            let coinsLost = Array[players.length];
             for (const player of players) {
                 if (currentIndex !== playerCounter) {  
-                    exchangeCoins(currentPlayer, player, 2);
+                    coinsLost[currentIndex] = exchangeCoins(currentPlayer, player, 2);
                 }
                 currentIndex++;
             }
             updateBalances(players);
+            document.getElementById('stadiumtext').style.display = "inline";
+
+            // TODO: text that money was taken
+            // TODO: maybe incorporate this into the (not yet implemented) text that shows up when receiving income
+            document.getElementById('stadiumtext').innerHTML = `<u><div>Player ${playerCounter + 1} received ${coinsLost.reduce((total, item) => total + item)} coins</u>`;
         }
         if (currentPlayer.establishments[7]) {
             document.getElementById('tvplayertextbuttons').style.display = "inline";
@@ -85,8 +91,6 @@ export function income(roll, players, playerCounter, buildings) {
             const buttonIDs = buildings.map(building => building.name);
             const displayNames = buildings.map(building => building.displayName);
 
-            document.getElementById('businesstextbuttons').style.display = "inline";
-
             document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = true; // disable trading with yourself
         
@@ -110,50 +114,58 @@ export function income(roll, players, playerCounter, buildings) {
             let receiveIndex;
             let giveIndex;
 
-            for (let i = 0; i < 15; i++) {
-                document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
-                    receiveIndex = i;
+            // TODO: Disable establishment buttons that the trading player does not have
 
-                    document.getElementById('businesstext2').style.display = "none";
-                    document.getElementById('businesstext3').style.display = "inline";
-                    document.getElementById('receiveindex').style.display = "none";
-                    document.getElementById('giveindex').style.display = "inline";
+            for (let i = 0; i < 15; i++) {
+                if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                    document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
+                        receiveIndex = i;
+
+                        document.getElementById('businesstext2').style.display = "none";
+                        document.getElementById('businesstext3').style.display = "inline";
+                        document.getElementById('receiveindex').style.display = "none";
+                        document.getElementById('giveindex').style.display = "inline";
+                    }
                 }
             }
 
             for (let i = 0; i < 15; i++) {
-                document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
-                    giveIndex = i;
+                if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                    document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
+                        giveIndex = i;
 
-                    currentPlayer.establishments[giveIndex]--; // giving away
-                    document.querySelector(`#${buttonIDs[giveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[giveIndex]}: ${currentPlayer.establishments[giveIndex]}`;
-                    targetPlayer.establishments[giveIndex]++;
-                    document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
-                    
-                    currentPlayer.establishments[receiveIndex]++; // receiving
-                    document.querySelector(`#${buttonIDs[receiveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${currentPlayer.establishments[receiveIndex]}`;
-                    targetPlayer.establishments[receiveIndex]--;
-                    document.querySelector(`#${buttonIDs[receiveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${targetPlayer.establishments[receiveIndex]}`;
+                        currentPlayer.establishments[giveIndex]--; // giving away
+                        document.querySelector(`#${buttonIDs[giveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[giveIndex]}: ${currentPlayer.establishments[giveIndex]}`;
+                        targetPlayer.establishments[giveIndex]++;
+                        document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
+                        
+                        currentPlayer.establishments[receiveIndex]++; // receiving
+                        document.querySelector(`#${buttonIDs[receiveIndex]}${playerCounter + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${currentPlayer.establishments[receiveIndex]}`;
+                        targetPlayer.establishments[receiveIndex]--;
+                        document.querySelector(`#${buttonIDs[receiveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${targetPlayer.establishments[receiveIndex]}`;
 
-                    document.getElementById('businesstext3').style.display = "none";
+                        document.getElementById('businesstext3').style.display = "none";
 
-                    document.getElementById('giveindex').style.display = "none";
+                        document.getElementById('giveindex').style.display = "none";
 
-                    // enable shop buttons
-                    document.getElementById('buysomething').style.display = "inline";
-                    enableShop(currentPlayer, buildings);
+                        // enable shop buttons
+                        document.getElementById('buysomething').style.display = "inline";
+                        enableShop(currentPlayer, buildings);
+
+                        document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
+                    }
                 }
             }
-            document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
         }
     }
     let activated_buildings;
-    let currentPlayer = 0;
+    let playerCycleIndex = 0;
     for (const player of players) {
-        if (currentPlayer === playerCounter) {
+        if (playerCycleIndex === playerCounter) {
             // will only return green and blue buildings
             activated_buildings = buildings.map((building, buildingIndex) => building.trigger?.includes(roll) ? buildingIndex : undefined).filter(x => x !== undefined); 
         } else {
+            // will only return blue buildings
             activated_buildings = buildings.map((building, buildingIndex) => (building.trigger?.includes(roll) && building.colour === 'blue') ? buildingIndex : undefined).filter(x => x !== undefined);
         }
         for (const buildingIndex of activated_buildings) {
@@ -171,7 +183,7 @@ export function income(roll, players, playerCounter, buildings) {
                 }
             }
         }
-        document.querySelector(`#balance${currentPlayer + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
-        currentPlayer++;
+        document.querySelector(`#balance${playerCycleIndex + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
+        playerCycleIndex++;
     }
 }
