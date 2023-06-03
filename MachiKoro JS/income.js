@@ -4,7 +4,7 @@ import { enableShop } from './shop.js'
 
 // TODO: remember to add/change html stuff
 
-function redActivate(players, playerCounter, flag) { // if flag, rolled 3
+function redActivate(players, playerCounter, flag, redIncome) { // if flag, rolled 3
     let index = playerCounter; // * * index is 0 indexed!!
     while (players[playerCounter].balance > 0) {
         index--;
@@ -15,16 +15,17 @@ function redActivate(players, playerCounter, flag) { // if flag, rolled 3
             break;
         }
         let numberOfRed = players[index].establishments[flag ? 3 : 10];
+
+        // don't even try to understand this line but it works
         let moneyOwed = flag ? (players[index].landmarks[1] ? (2 * numberOfRed) : numberOfRed) : (players[index].landmarks[1] ? (3 * numberOfRed) : (2 * numberOfRed));
-        if (moneyOwed > players[playerCounter].balance) {
-            moneyOwed = players[playerCounter].balance;
-        }
-        players[playerCounter].balance -= moneyOwed;
-        players[index].balance += moneyOwed;
+        let moneyExchanged = exchangeCoins(players[index], players[playerCounter], moneyOwed);
+        redIncome[index] += moneyExchanged;
+        redIncome[playerCounter] -= moneyExchanged;
     }
 }
 
-function exchangeCoins(player, targetPlayer, amount) { // returns the amount of coins exchanged
+function exchangeCoins(player, targetPlayer, amount) { // returns the positive amount of coins exchanged
+    // accounts for balance not being able to go negative
     if (targetPlayer.balance >= amount) {
         targetPlayer.balance -= amount;
         player.balance += amount;
@@ -46,26 +47,24 @@ function updateBalances(players) {
 }
 
 export function income(roll, players, playerCounter, buildings) {
+    let redIncome = Array(players.length).fill(0);
+    let greenBlueIncome = Array(players.length).fill(0);
+    let purpleIncome = Array(players.length).fill(0);
     if (roll === 3 || roll === 10) {
-        redActivate(players, playerCounter, roll === 3);
-    } else if (roll === 6) {
+        redActivate(players, playerCounter, roll === 3, redIncome);
+    } else if (roll === 6) { // shouldn't make a difference if purple goes before green/blue
         let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
-            
             let currentIndex = 0;
-            let coinsLost = Array[players.length];
             for (const player of players) {
                 if (currentIndex !== playerCounter) {  
-                    coinsLost[currentIndex] = exchangeCoins(currentPlayer, player, 2);
+                    purpleIncome[currentIndex] = exchangeCoins(currentPlayer, player, 2);
+                    document.getElementById(`stadiumtext${currentIndex + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} lost ${purpleIncome[currentIndex]} coins.</div></u>`;
                 }
                 currentIndex++;
             }
-            updateBalances(players);
-            document.getElementById('stadiumtext').style.display = "inline";
-
-            // TODO: text that money was taken
-            // TODO: maybe incorporate this into the (not yet implemented) text that shows up when receiving income
-            document.getElementById('stadiumtext').innerHTML = `<u><div>Player ${playerCounter + 1} received ${coinsLost.reduce((total, item) => total + item)} coins</u>`;
+            // TODO: make sure that text that money was taken works
+            document.getElementById(`stadiumtext${playerCounter + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} received ${purpleIncome.reduce((total, item) => total + item)} coins.</div></u>`;
         }
         if (currentPlayer.establishments[7]) {
             document.getElementById('tvplayertextbuttons').style.display = "inline";
@@ -114,9 +113,9 @@ export function income(roll, players, playerCounter, buildings) {
             let receiveIndex;
             let giveIndex;
 
-            // TODO: Disable establishment buttons that the trading player does not have
-
+            // TODO: Test that disabled establishment buttons that the trading player does not have works
             for (let i = 0; i < 15; i++) {
+                document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
                 if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
                     document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
                         receiveIndex = i;
@@ -130,6 +129,7 @@ export function income(roll, players, playerCounter, buildings) {
             }
 
             for (let i = 0; i < 15; i++) {
+                document.getElementById(`give${buttonIDs[i]}button`).disabled = currentPlayer.establishments[i] === 0;
                 if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
                     document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
                         giveIndex = i;
@@ -153,6 +153,11 @@ export function income(roll, players, playerCounter, buildings) {
                         enableShop(currentPlayer, buildings);
 
                         document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
+
+                        // text for what establishments were traded
+                        document.getElementById('businesstext').style.display = "inline";
+                        document.querySelector('#businesstext1').innerHTML = 'fsdafdsf'; // finish this
+                        document.querySelector('#businesstext2').innerHTML = 'fdsafdsf'; // finish this too
                     }
                 }
             }
@@ -168,22 +173,33 @@ export function income(roll, players, playerCounter, buildings) {
             // will only return blue buildings
             activated_buildings = buildings.map((building, buildingIndex) => (building.trigger?.includes(roll) && building.colour === 'blue') ? buildingIndex : undefined).filter(x => x !== undefined);
         }
+        let currentIncome = 0;
         for (const buildingIndex of activated_buildings) {
             if (Array.isArray(buildings[buildingIndex].income)) { // shopping mall doesn't apply here
                 let numberOfSpecial = 0;
                 for (const incomeIndex of buildings[buildingIndex].income) {
                     numberOfSpecial += player.establishments[incomeIndex];
                 }
-                player.balance += buildings[buildingIndex].multiplier * numberOfSpecial;
+                const buildingIncome = buildings[buildingIndex].multiplier * numberOfSpecial;
+                currentIncome += buildingIncome;
+                player.balance += buildingIncome;
             } else {
                 if (buildings[buildingIndex].shopping === true && player.landmarks[1]) { // shopping mall
-                    player.balance += player.establishments[buildingIndex] * (buildings[buildingIndex].income + 1);
+                    const buildingIncome = player.establishments[buildingIndex] * (buildings[buildingIndex].income + 1);
+                    currentIncome += buildingIncome
+                    player.balance += buildingIncome;
                 } else {
-                    player.balance += player.establishments[buildingIndex] * buildings[buildingIndex].income;
+                    const buildingIncome = player.establishments[buildingIndex] * buildings[buildingIndex].income;
+                    currentIncome += buildingIncome;
+                    player.balance += buildingIncome;
                 }
             }
         }
         document.querySelector(`#balance${playerCycleIndex + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
+        redIncomes[playerCycleIndex] += currentIncome;
         playerCycleIndex++;
     }
+    // TODO: stadium should be combined, TV station should be its separate text
+
+    // TODO: instead of separate text for income amount, could put it in brackets next to the player's balance
 }
