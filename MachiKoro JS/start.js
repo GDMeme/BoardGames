@@ -107,7 +107,7 @@ export function start(numberofplayers) {
     document.getElementById('endturnbutton').onclick = function() {
         if (document.getElementById('rolldoubles').style.display !== "inline") { // amusement park did not activate
             playerCounter++;
-        }
+        } // otherwise, don't increment playerCounter
         if (playerCounter === numberofplayers) {
             playerCounter = 0;
         }
