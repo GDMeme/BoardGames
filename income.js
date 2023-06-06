@@ -4,6 +4,8 @@ import { enableShop } from './shop.js'
 
 // TODO: remember to add/change html stuff
 
+// TODO: cookie / light/dark mode ?
+
 function redActivate(players, playerCounter, flag, redIncome) { // if flag, rolled 3
     let index = playerCounter; // * * index is 0 indexed!!
     while (players[playerCounter].balance > 0) {
@@ -95,7 +97,7 @@ export function income(roll, players, playerCounter, buildings) {
         
             document.getElementById('businessplayerbuttons').style.display = "inline";
             document.getElementById('businesstext1').style.display = "inline";
-            let targetPlayer;
+            let targetPlayer = players[0]; // temporary value in order for button to work as intended
             let targetPlayerIndex;
             for (let i = 1; i <= players.length; i++) {
                 document.getElementById(`businessplayer${i}button`).onclick = function() {
@@ -115,8 +117,8 @@ export function income(roll, players, playerCounter, buildings) {
 
             // TODO: Test that disabled establishment buttons that the trading player does not have works
             for (let i = 0; i < 15; i++) {
-                document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
                 if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                    document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
                     document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
                         receiveIndex = i;
 
@@ -129,8 +131,9 @@ export function income(roll, players, playerCounter, buildings) {
             }
 
             for (let i = 0; i < 15; i++) {
-                document.getElementById(`give${buttonIDs[i]}button`).disabled = currentPlayer.establishments[i] === 0;
+
                 if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                    document.getElementById(`give${buttonIDs[i]}button`).disabled = currentPlayer.establishments[i] === 0;
                     document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
                         giveIndex = i;
 
@@ -156,8 +159,8 @@ export function income(roll, players, playerCounter, buildings) {
 
                         // text for what establishments were traded
                         document.getElementById('businesstext').style.display = "inline";
-                        document.querySelector('#businesstext1').innerHTML = 'fsdafdsf'; // finish this
-                        document.querySelector('#businesstext2').innerHTML = 'fdsafdsf'; // finish this too
+                        document.querySelector('#businesstext4').innerHTML = `Player ${playerCounter + 1} received ${buttonIDs[receiveIndex]} and lost ${buttonIDs[giveIndex]}`;
+                        document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${buttonIDs[receiveIndex]} and received ${buttonIDs[giveIndex]}`;
                     }
                 }
             }
@@ -196,7 +199,7 @@ export function income(roll, players, playerCounter, buildings) {
             }
         }
         document.querySelector(`#balance${playerCycleIndex + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
-        redIncomes[playerCycleIndex] += currentIncome;
+        redIncome[playerCycleIndex] += currentIncome;
         playerCycleIndex++;
     }
     // TODO: stadium should be combined, TV station should be its separate text
