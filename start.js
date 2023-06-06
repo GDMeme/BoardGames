@@ -120,7 +120,10 @@ export function start(numberofplayers) {
         document.getElementById('rolldoubles').style.display = "none";
         document.getElementById('roll2dicecheckbox').style.display = "inline";
         document.getElementById('rerollbutton').disabled = true;
-        document.getElementById('stadiumtext').style.display = "none";
+        for (let i = 0; i < players.length; i++) {
+            document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
+        }
+        document.getElementById('businesstext').style.display = "none";
 
         // check landmarks
         document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
