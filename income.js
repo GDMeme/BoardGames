@@ -1,8 +1,8 @@
 import { enableShop } from './shop.js'
 
-// TODO: remember to include shopping mall
+// TODO: remember to test shopping mall
 
-// TODO: remember to add/change html stuff
+// TODO: radio tower income doesn't work
 
 // TODO: cookie / light/dark mode ?
 
@@ -24,6 +24,7 @@ function redActivate(players, playerCounter, flag, redIncome) { // if flag, roll
         redIncome[index] += moneyExchanged;
         redIncome[playerCounter] -= moneyExchanged;
     }
+    return redIncome;
 }
 
 function exchangeCoins(player, targetPlayer, amount) { // returns the positive amount of coins exchanged
@@ -41,10 +42,8 @@ function exchangeCoins(player, targetPlayer, amount) { // returns the positive a
 }
 
 function updateBalances(players) {
-    let counter = 1;
-    for (const player of players) {
-        document.querySelector(`#balance${counter}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // update player balances
-        counter++;
+    for (let i = 0; i < players.length; i++) {
+        document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${players[i]}</font>`;
     }
 }
 
@@ -53,7 +52,7 @@ export function income(roll, players, playerCounter, buildings) {
     let greenBlueIncome = Array(players.length).fill(0);
     let purpleIncome = Array(players.length).fill(0);
     if (roll === 3 || roll === 10) {
-        redActivate(players, playerCounter, roll === 3, redIncome);
+        redIncome = redActivate(players, playerCounter, roll === 3, redIncome);
     } else if (roll === 6) { // shouldn't make a difference if purple goes before green/blue
         let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
@@ -61,32 +60,39 @@ export function income(roll, players, playerCounter, buildings) {
             for (const player of players) {
                 if (currentIndex !== playerCounter) {  
                     purpleIncome[currentIndex] = exchangeCoins(currentPlayer, player, 2);
-                    document.getElementById(`stadiumtext${currentIndex + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} lost ${purpleIncome[currentIndex]} coins.</div></u>`;
+                    document.querySelector(`#stadiumtext${currentIndex + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} lost ${purpleIncome[currentIndex]} coins.</div></u>`;
                 }
                 currentIndex++;
             }
             // TODO: make sure that text that money was taken works
-            document.getElementById(`stadiumtext${playerCounter + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} received ${purpleIncome.reduce((total, item) => total + item)} coins.</div></u>`;
+            purpleIncome[playerCounter] = purpleIncome.reduce((total, item) => total + item);
+
+            document.querySelector(`#stadiumtext${playerCounter + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} received ${purpleIncome[playerCounter]} coins.</div></u>`;
         }
         if (currentPlayer.establishments[7]) {
             document.getElementById('tvplayertextbuttons').style.display = "inline";
+            document.getElementById('tvplayerbuttons').style.display = "inline";
             document.querySelector('#tvplayertext').innerHTML = "Who would you like to take 5 coins from?";
             document.getElementById('endturnbutton').disabled = true;
             document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
 
             for (let i = 1; i <= players.length; i++) {     
                 document.getElementById(`tvplayer${i}button`).onclick = function() {
-                    
                     // TODO: make sure that text that money was exchanged works
                     let numberOfCoins = exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
                     document.querySelector('#tvplayertext').innerHTML = `Player ${playerCounter + 1} received ${numberOfCoins} coins. Player ${i} lost ${numberOfCoins} coins.`;
                     updateBalances(players);
+                    purpleIncome[playerCounter] += numberOfCoins;
+                    purpleIncome[i - 1] -= numberOfCoins; // since i is not 0 indexed
 
                     document.getElementById('endturnbutton').disabled = false;
-                    document.getElementById('tvplayertextbuttons').style.display = "none";
+                    document.getElementById('tvplayerbuttons').style.display = "none";
+                    document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
+
+                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins
                 }
             }
-            document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
+
         }
         if (currentPlayer.establishments[8]) {
             const buttonIDs = buildings.map(building => building.name);
@@ -109,6 +115,8 @@ export function income(roll, players, playerCounter, buildings) {
                     document.getElementById('businessplayerbuttons').style.display = "none";
 
                     document.getElementById('receiveindex').style.display = "inline";
+
+                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after choosing a player to trade with
                 }
             }
             
@@ -199,10 +207,30 @@ export function income(roll, players, playerCounter, buildings) {
             }
         }
         document.querySelector(`#balance${playerCycleIndex + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
-        redIncome[playerCycleIndex] += currentIncome;
+        greenBlueIncome[playerCycleIndex] = currentIncome;
         playerCycleIndex++;
     }
-    // TODO: stadium should be combined, TV station should be its separate text
 
-    // TODO: instead of separate text for income amount, could put it in brackets next to the player's balance
+    // red income text
+    if (!redIncome.every(income => income === 0)) {
+        document.getElementById('redincomebreak').style.display = "inline";
+        for (let i = 0; i < players.length; i++) {
+            document.getElementById(`redincome${i + 1}`).style.display = redIncome[i] === 0 ? "none" : "flex";
+            document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${redIncome[i] > 0 ? 'received' : 'lost'} ${redIncome[i] > 0 ? redIncome[i] : -redIncome[i]} ${(redIncome[i] > 1 || redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
+        }
+    }
+
+    // green/blue income text
+    if (!greenBlueIncome.every(income => income === 0)) {
+        for (let i = 0; i < players.length; i++) {
+            document.getElementById(`greenblueincome${i + 1}`).style.display = greenBlueIncome[i] === 0 ? "none" : "flex";
+            document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${greenBlueIncome[i]} ${(greenBlueIncome[i] > 1 || greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
+        }
+    }
+    
+    let totalIncome = Array(players.length).fill(0);
+    for (let i = 0; i < players.length; i++) {
+        totalIncome[i] = purpleIncome[i] + redIncome[i] + greenBlueIncome[i];
+    }
+    return totalIncome;
 }

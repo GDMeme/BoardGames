@@ -1,8 +1,8 @@
 import { Player } from './player.js';
 
-import { buy, enableShop } from './shop.js';
+import { buy } from './shop.js';
 
-import { income } from './income.js';
+import { playerTurn } from './playerturn.js'
 
 const buildings = [
     {name: 'wheatfield', displayName: 'Wheat Field', cost: 1, income: 1, shopping: false, colour: 'blue', trigger: [1]},
@@ -30,41 +30,6 @@ const buttonIDs = buildings.map(building => building.name);
 
 // TODO: implement income (+ business center), shopping mall interaction
 
-function playerTurn(players, playerCounter, flag) {
-    document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
-    document.getElementById('endturnbutton').disabled = false; // enable the end turn button
-    document.getElementById('roll2dicecheckbox').disabled = true;
-
-    let currentPlayer = players[playerCounter];
-    if (currentPlayer.landmarks[3] && flag) {
-        document.getElementById('rerollbutton').disabled = false; 
-    }
-    // rolling stuff
-    let rollNumber;
-    if (document.getElementById('roll2dicecheckbox').checked) {
-        let firstRoll = Math.floor(Math.random() * 6 + 1);
-        let secondRoll = Math.floor(Math.random() * 6 + 1);
-        rollNumber = firstRoll + secondRoll;
-        if (firstRoll === secondRoll && currentPlayer.landmarks[2]) {
-            document.getElementById('rolldoubles').style.display = "inline";
-        }
-        document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${rollNumber}! </u>`;
-    } else {
-        rollNumber = Math.floor(Math.random() * 6 + 1);
-        document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${rollNumber}! </u>`;
-    }
-    document.getElementById('rollnumber').style.display = "inline";
-
-    // everyone collects income
-    income(rollNumber, players, playerCounter, buildings);
-
-    // buy establishment/landmark
-    if (!(rollNumber === 6 && currentPlayer.establishments[8])) {
-        document.getElementById('buysomething').style.display = "inline";
-        enableShop(currentPlayer, buildings);
-    }
-}
-
 export function start(numberofplayers) {
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('startgametext').style.display = "inline";
@@ -81,20 +46,18 @@ export function start(numberofplayers) {
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    const players = [];
-    for (let i = 0; i < numberofplayers; i++) {
-        players.push(new Player());
-    }
+    const players = Array(numberofplayers).fill(new Player());
 
     let playerCounter = 0; // * * playerCounter is 0 indexed!!!
 
+    let income;
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
-        playerTurn(players, playerCounter, false);
+        income = playerTurn(players, playerCounter, false);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
-        playerTurn(players, playerCounter, true);
+        playerTurn(players, playerCounter, true, income);
     }
 
     for (let i = 0; i < buttonIDs.length; i++) {
@@ -122,8 +85,13 @@ export function start(numberofplayers) {
         document.getElementById('rerollbutton').disabled = true;
         for (let i = 0; i < players.length; i++) {
             document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
+            document.getElementById(`redincome${i + 1}`).style.display = "none";
+            document.getElementById(`greenblueincome${i + 1}`).style.display = "none";
         }
+        document.getElementById('tvplayertextbuttons').style.display = "none";
         document.getElementById('businesstext').style.display = "none";
+        document.getElementById('incomesummary').style.display = "none";
+        document.getElementById('redincomebreak').style.display = "none";
 
         // check landmarks
         document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
