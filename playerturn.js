@@ -2,7 +2,7 @@ import { updateBalances, income } from './income.js';
 
 import { enableShop } from './shop.js'
 
-function playerTurn(players, playerCounter, flag, previousIncome) {
+export function playerTurn(players, playerCounter, flag, buildings, previousIncome) {
     document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
     document.getElementById('roll2dicecheckbox').disabled = true;

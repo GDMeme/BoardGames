@@ -41,9 +41,9 @@ function exchangeCoins(player, targetPlayer, amount) { // returns the positive a
     }
 }
 
-function updateBalances(players) {
+export function updateBalances(players) {
     for (let i = 0; i < players.length; i++) {
-        document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${players[i]}</font>`;
+        document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${players[i].balance}</font>`;
     }
 }
 
@@ -80,7 +80,7 @@ export function income(roll, players, playerCounter, buildings) {
                 document.getElementById(`tvplayer${i}button`).onclick = function() {
                     // TODO: make sure that text that money was exchanged works
                     let numberOfCoins = exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
-                    document.querySelector('#tvplayertext').innerHTML = `Player ${playerCounter + 1} received ${numberOfCoins} coins. Player ${i} lost ${numberOfCoins} coins.`;
+                    document.querySelector('#tvplayertext').innerHTML = `<div>Player ${playerCounter + 1} received ${numberOfCoins} coins.</div> <div>Player ${i} lost ${numberOfCoins} coins.</div>`;
                     updateBalances(players);
                     purpleIncome[playerCounter] += numberOfCoins;
                     purpleIncome[i - 1] -= numberOfCoins; // since i is not 0 indexed
@@ -89,6 +89,7 @@ export function income(roll, players, playerCounter, buildings) {
                     document.getElementById('tvplayerbuttons').style.display = "none";
                     document.getElementById(`tvplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
 
+                    document.getElementById('incomesummary').style.display = "inline";
                     document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins
                 }
             }

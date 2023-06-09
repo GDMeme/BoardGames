@@ -30,34 +30,38 @@ const buttonIDs = buildings.map(building => building.name);
 
 // TODO: implement income (+ business center), shopping mall interaction
 
-export function start(numberofplayers) {
+export function start(numberOfPlayers) {
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('startgametext').style.display = "inline";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
-    if (numberofplayers === 4) {
+    if (numberOfPlayers === 4) {
         document.getElementById('player3inventory').style.visibility = "visible";
         document.getElementById('player4inventory').style.visibility = "visible";
-    } else if (numberofplayers === 3) {
+    } else if (numberOfPlayers === 3) {
         document.getElementById('player3inventory').style.visibility = "visible";
     } else {
         document.getElementById('player3inventory').style.visibility = "hidden";
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    const players = Array(numberofplayers).fill(new Player());
+    const players = Array(numberOfPlayers);
+
+    for (let i = 0; i < numberOfPlayers; i++) {
+        players[i] = new Player();
+    }
 
     let playerCounter = 0; // * * playerCounter is 0 indexed!!!
 
     let income;
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
-        income = playerTurn(players, playerCounter, false);
+        income = playerTurn(players, playerCounter, false, buildings);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
-        playerTurn(players, playerCounter, true, income);
+        playerTurn(players, playerCounter, true, buildings, income);
     }
 
     for (let i = 0; i < buttonIDs.length; i++) {
@@ -71,7 +75,7 @@ export function start(numberofplayers) {
         if (document.getElementById('rolldoubles').style.display !== "inline") { // amusement park did not activate
             playerCounter++;
         } // otherwise, don't increment playerCounter
-        if (playerCounter === numberofplayers) {
+        if (playerCounter === numberOfPlayers) {
             playerCounter = 0;
         }
         document.querySelector('#playerturn').innerHTML = `Player ${playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
