@@ -2,15 +2,14 @@ import { income } from './income.js';
 
 import { enableShop } from './shop.js'
 
-export function playerTurn(players, playerCounter, flag, buildings, previousIncome) {
+export function playerTurn(players, playerCounter, flag, buildings) { // flag true means regular turn, not reroll
     document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
-    document.getElementById('roll2dicecheckbox').disabled = true;
-
+    
     let currentPlayer = players[playerCounter];
-    if (currentPlayer.landmarks[3] && flag) {
-        document.getElementById('rerollbutton').disabled = false;
-    }
+    document.getElementById('roll2dicecheckbox').disabled = !(flag && players[playerCounter].landmarks[3]); // able to roll two dice if rerolling and radio tower
+    document.getElementById('rerollbutton').disabled = !(currentPlayer.landmarks[3] && flag);
+    
     // rolling stuff
     let rollNumber;
     if (document.getElementById('roll2dicecheckbox').checked) {
