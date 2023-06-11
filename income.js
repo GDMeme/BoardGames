@@ -1,11 +1,5 @@
 import { enableShop } from './shop.js'
 
-// TODO: remember to test shopping mall
-
-// TODO: radio tower income doesn't work
-
-// TODO: cookie / light/dark mode ?
-
 function redActivate(players, playerCounter, flag, redIncome) { // if flag, rolled 3
     let index = playerCounter; // * * index is 0 indexed!!
     while (players[playerCounter].balance > 0) {
@@ -28,6 +22,7 @@ function redActivate(players, playerCounter, flag, redIncome) { // if flag, roll
 }
 
 function exchangeCoins(player, targetPlayer, amount) { // returns the positive amount of coins exchanged
+    // "player" receives the money
     // accounts for balance not being able to go negative
     if (targetPlayer.balance >= amount) {
         targetPlayer.balance -= amount;
@@ -56,20 +51,23 @@ export function income(roll, players, playerCounter, buildings) {
     } else if (roll === 6) { // shouldn't make a difference if purple goes before green/blue
         let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
-            let currentIndex = 0;
-            for (const player of players) {
-                if (currentIndex !== playerCounter) {  
-                    purpleIncome[currentIndex] = exchangeCoins(currentPlayer, player, 2);
-                    document.querySelector(`#stadiumtext${currentIndex + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} lost ${purpleIncome[currentIndex]} coins.</div></u>`;
+            document.getElementById('stadiumbreak').style.display = "inline";
+
+            for (let i = 0; i < players.length; i++) {
+                if (i !== playerCounter) {  
+                    purpleIncome[i] = exchangeCoins(currentPlayer, players[i], 2);
+                    document.getElementById(`stadiumtext${i + 1}`).style.display = "inline";
+                    document.querySelector(`#stadiumtext${i + 1}`).innerHTML = `<div>Player ${i + 1} gave ${purpleIncome[i]} coins to Player ${playerCounter + 1}.</div>`;
                 }
-                currentIndex++;
             }
-            // TODO: make sure that text that money was taken works
             purpleIncome[playerCounter] = purpleIncome.reduce((total, item) => total + item);
 
-            document.querySelector(`#stadiumtext${playerCounter + 1}`).innerHTML = `<u><div>Player ${playerCounter + 1} received ${purpleIncome[playerCounter]} coins.</div></u>`;
+            document.getElementById(`stadiumtext${playerCounter + 1}`).style.display = "inline";
+            document.querySelector(`#stadiumtext${playerCounter + 1}`).innerHTML = `<div>Player ${playerCounter + 1} received ${purpleIncome[playerCounter]} coins from Stadium.</div>`;
         }
         if (currentPlayer.establishments[7]) {
+            document.getElementById('tvstationbreak').style.display = "inline";
+
             document.getElementById('tvplayertextbuttons').style.display = "inline";
             document.getElementById('tvplayerbuttons').style.display = "inline";
             document.querySelector('#tvplayertext').innerHTML = "Who would you like to take 5 coins from?";
@@ -78,7 +76,6 @@ export function income(roll, players, playerCounter, buildings) {
 
             for (let i = 1; i <= players.length; i++) {     
                 document.getElementById(`tvplayer${i}button`).onclick = function() {
-                    // TODO: make sure that text that money was exchanged works
                     let numberOfCoins = exchangeCoins(currentPlayer, players[i - 1], 5); // since i is not 0 indexed
                     document.querySelector('#tvplayertext').innerHTML = `<div>Player ${playerCounter + 1} received ${numberOfCoins} coins.</div> <div>Player ${i} lost ${numberOfCoins} coins.</div>`;
                     updateBalances(players);
@@ -96,6 +93,8 @@ export function income(roll, players, playerCounter, buildings) {
 
         }
         if (currentPlayer.establishments[8]) {
+            document.getElementById('businessbreak').style.display = "inline";
+
             const buttonIDs = buildings.map(building => building.name);
             const displayNames = buildings.map(building => building.displayName);
 
@@ -124,7 +123,6 @@ export function income(roll, players, playerCounter, buildings) {
             let receiveIndex;
             let giveIndex;
 
-            // TODO: Test that disabled establishment buttons that the trading player does not have works
             for (let i = 0; i < 15; i++) {
                 if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
                     document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
@@ -223,6 +221,7 @@ export function income(roll, players, playerCounter, buildings) {
 
     // green/blue income text
     if (!greenBlueIncome.every(income => income === 0)) {
+        document.getElementById('greenblueincomebreak').style.display = "inline";
         for (let i = 0; i < players.length; i++) {
             document.getElementById(`greenblueincome${i + 1}`).style.display = greenBlueIncome[i] === 0 ? "none" : "flex";
             document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${greenBlueIncome[i]} ${(greenBlueIncome[i] > 1 || greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
