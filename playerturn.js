@@ -1,4 +1,4 @@
-import { updateBalances, income } from './income.js';
+import { income } from './income.js';
 
 import { enableShop } from './shop.js'
 
@@ -10,13 +10,6 @@ export function playerTurn(players, playerCounter, flag, buildings, previousInco
     let currentPlayer = players[playerCounter];
     if (currentPlayer.landmarks[3] && flag) {
         document.getElementById('rerollbutton').disabled = false;
-
-        // subtract the income they got from the original roll
-        for (let i = 0; i < players.length; i++) {
-            players[i].balance -= previousIncome[i];
-        }
-        updateBalances(players);
-        // TODO: check that radio tower subtracts the income that they got last turn
     }
     // rolling stuff
     let rollNumber;
