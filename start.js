@@ -2,7 +2,11 @@ import { Player } from './player.js';
 
 import { buy } from './shop.js';
 
-import { playerTurn } from './playerturn.js'
+import { playerTurn } from './playerturn.js';
+
+import { updateBalances } from './income.js';
+
+import { endTurn } from './endturn.js';
 
 const buildings = [
     {name: 'wheatfield', displayName: 'Wheat Field', cost: 1, income: 1, shopping: false, colour: 'blue', trigger: [1]},
@@ -24,11 +28,7 @@ const buildings = [
     {name: 'shoppingmall', displayName: 'Shopping Mall', cost: 10},
     {name: 'amusementpark', displayName: 'Amusement Park', cost: 16},
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
-]
-
-const buttonIDs = buildings.map(building => building.name);
-
-// TODO: implement income (+ business center), shopping mall interaction
+];
 
 export function start(numberOfPlayers) {
     document.getElementById('beforegametext').style.display = "none";
@@ -57,13 +57,23 @@ export function start(numberOfPlayers) {
     let income;
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
-        income = playerTurn(players, playerCounter, false, buildings);
+        document.getElementById('rolldoubles').style.display = "none";
+
+        // subtract the income they got from the original roll
+        for (let i = 0; i < players.length; i++) {
+            players[i].balance -= income[i];
+        }
+        updateBalances(players);
+
+        endTurn(players, playerCounter, numberOfPlayers, true);
+        playerTurn(players, playerCounter, false, buildings, income);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
-        playerTurn(players, playerCounter, true, buildings, income);
+        income = playerTurn(players, playerCounter, true, buildings); // need to keep track of income to account for rerolling
     }
 
+    const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
@@ -72,32 +82,6 @@ export function start(numberOfPlayers) {
     }
 
     document.getElementById('endturnbutton').onclick = function() {
-        if (document.getElementById('rolldoubles').style.display !== "inline") { // amusement park did not activate
-            playerCounter++;
-        } // otherwise, don't increment playerCounter
-        if (playerCounter === numberOfPlayers) {
-            playerCounter = 0;
-        }
-        document.querySelector('#playerturn').innerHTML = `Player ${playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
-        document.getElementById('rolldicebutton').disabled = false;
-        document.getElementById('endturnbutton').disabled = true;
-        document.getElementById('rollnumber').style.display = "none";
-        document.getElementById('roll2dicecheckbox').checked = false;
-        document.getElementById('buysomething').style.display = "none";
-        document.getElementById('rolldoubles').style.display = "none";
-        document.getElementById('roll2dicecheckbox').style.display = "inline";
-        document.getElementById('rerollbutton').disabled = true;
-        for (let i = 0; i < players.length; i++) {
-            document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
-            document.getElementById(`redincome${i + 1}`).style.display = "none";
-            document.getElementById(`greenblueincome${i + 1}`).style.display = "none";
-        }
-        document.getElementById('tvplayertextbuttons').style.display = "none";
-        document.getElementById('businesstext').style.display = "none";
-        document.getElementById('incomesummary').style.display = "none";
-        document.getElementById('redincomebreak').style.display = "none";
-
-        // check landmarks
-        document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
+        endTurn(players, playerCounter, numberOfPlayers, false);
     }
 }
