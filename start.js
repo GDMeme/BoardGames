@@ -65,7 +65,7 @@ export function start(numberOfPlayers) {
         }
         updateBalances(players);
 
-        endTurn(players, playerCounter, numberOfPlayers, true);
+        playerCounter = endTurn(players, playerCounter, numberOfPlayers, true);
         playerTurn(players, playerCounter, false, buildings, income);
     }
 
@@ -82,6 +82,6 @@ export function start(numberOfPlayers) {
     }
 
     document.getElementById('endturnbutton').onclick = function() {
-        endTurn(players, playerCounter, numberOfPlayers, false);
+        playerCounter = endTurn(players, playerCounter, numberOfPlayers, false);
     }
 }
