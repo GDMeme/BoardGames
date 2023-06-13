@@ -66,7 +66,7 @@ export function start(numberOfPlayers) {
         updateBalances(players);
 
         playerCounter = endTurn(players, playerCounter, numberOfPlayers, true);
-        playerTurn(players, playerCounter, false, buildings, income);
+        playerTurn(players, playerCounter, false, buildings);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
