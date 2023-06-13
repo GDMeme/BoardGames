@@ -1,5 +1,5 @@
 export function endTurn(players, playerCounter, numberOfPlayers, flag) { // flag true means the player rerolled
-    if ((document.getElementById('rolldoubles').style.display !== "inline") || !flag) { // amusement park did not activate
+    if ((document.getElementById('rolldoubles').style.display !== "inline") && !flag) { // amusement park did not activate
         playerCounter++;
     } // otherwise, don't increment playerCounter
     if (playerCounter === numberOfPlayers) {
