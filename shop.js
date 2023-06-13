@@ -1,6 +1,6 @@
 import { end } from './end.js'
 
-const currentBuildings = Array(12).fill(6); // not including purple establishments
+const currentBuildings = Array(15).fill(6); // 6th, 7th, and 8th indexes never get used
 
 export function buy(building_num, player, playerCounter, buildings) {// * * 15 16 17 18 are the landmarks
     const { name, displayName, cost } = buildings[building_num];
@@ -19,13 +19,16 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
             end(playerCounter);
         }
     }
-    document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5"> Balance: ${player.balance} </font>`; // since playerCounter is 0 indexed
+    document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // since playerCounter is 0 indexed
 
     // disable all shop buttons after buying something
     document.querySelectorAll('.shop').forEach(button => button.disabled = true);
 
     // disable the reroll button
     document.getElementById('rerollbutton').disabled = true;
+
+    // disable the roll 2 dice checkbox
+    document.getElementById('roll2dicecheckbox').disabled = true;
 }
 
 export function enableShop(player, buildings) {

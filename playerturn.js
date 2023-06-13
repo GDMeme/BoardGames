@@ -7,7 +7,7 @@ export function playerTurn(players, playerCounter, flag, buildings) { // flag tr
     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
     
     let currentPlayer = players[playerCounter];
-    document.getElementById('roll2dicecheckbox').disabled = !(flag && currentPlayer.landmarks[3]) || currentPlayer.landmarks[0]; // able to roll two dice if rerolling,  radio tower, train station
+    document.getElementById('roll2dicecheckbox').disabled = !(flag && currentPlayer.landmarks[3]) && currentPlayer.landmarks[0]; // able to roll two dice if rerolling,  radio tower, train station
     document.getElementById('rerollbutton').disabled = !(currentPlayer.landmarks[3] && flag);
     
     // rolling stuff
