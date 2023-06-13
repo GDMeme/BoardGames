@@ -166,8 +166,10 @@ export function income(roll, players, playerCounter, buildings) {
 
                         // text for what establishments were traded
                         document.getElementById('businesstext').style.display = "inline";
-                        document.querySelector('#businesstext4').innerHTML = `Player ${playerCounter + 1} received ${buttonIDs[receiveIndex]} and lost ${buttonIDs[giveIndex]}`;
-                        document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${buttonIDs[receiveIndex]} and received ${buttonIDs[giveIndex]}`;
+                        document.querySelector('#businesstext4').innerHTML = `Player ${playerCounter + 1} received ${displayNames[receiveIndex]} and lost ${displayNames[giveIndex]}.`;
+                        document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${displayNames[receiveIndex]} and received ${displayNames[giveIndex]}.`;
+
+                        document.getElementById('endturnbutton').disabled = false;
                     }
                 }
             }
