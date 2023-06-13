@@ -2,6 +2,7 @@ import { enableShop } from './shop.js'
 
 function redActivate(players, playerCounter, flag, redIncome) { // if flag, rolled 3
     let index = playerCounter; // * * index is 0 indexed!!
+    let numberOfRed, moneyOwed, moneyExchanged;
     while (players[playerCounter].balance > 0) {
         index--;
         if (index === -1) {
@@ -10,11 +11,12 @@ function redActivate(players, playerCounter, flag, redIncome) { // if flag, roll
         if (index === playerCounter) {
             break;
         }
-        let numberOfRed = players[index].establishments[flag ? 3 : 10];
+        numberOfRed = players[index].establishments[flag ? 3 : 10];
 
         // don't even try to understand this line but it works
-        let moneyOwed = flag ? (players[index].landmarks[1] ? (2 * numberOfRed) : numberOfRed) : (players[index].landmarks[1] ? (3 * numberOfRed) : (2 * numberOfRed));
-        let moneyExchanged = exchangeCoins(players[index], players[playerCounter], moneyOwed);
+        // accounts for shopping mall
+        moneyOwed = flag ? (players[index].landmarks[1] ? (2 * numberOfRed) : numberOfRed) : (players[index].landmarks[1] ? (3 * numberOfRed) : (2 * numberOfRed));
+        moneyExchanged = exchangeCoins(players[index], players[playerCounter], moneyOwed);
         redIncome[index] += moneyExchanged;
         redIncome[playerCounter] -= moneyExchanged;
     }
