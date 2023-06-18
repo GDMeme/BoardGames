@@ -90,7 +90,7 @@ function templateMatch(result) {
     } else {
         return false;
     }
-    if (!currentBuildings.every(counter => counter <= 6)) { // check total number of each establishment
+    if (!currentBuildings.every(numberOfBuildings => numberOfBuildings <= 6)) { // check total number of each establishment
         return false;
     }
     if (!Number.isInteger(result?.playerCounter) || (result.playerCounter < 0 || result.playerCounter >= result.numberOfPlayers)) { // verify playerCounter is within the bounds of numberOfPlayers
