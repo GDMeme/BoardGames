@@ -21,26 +21,37 @@ document.getElementById('existinggamefile').addEventListener('change', loadGame)
 
 function loadGame(event) {
 	const input = event.target;
-    const reader = new FileReader();
-    if ('files' in input && input.files.length > 0) { // if the file exists
-	      let promise = new Promise(function(resolve, reject) {
-            reader.onload = event => resolve(event.target.result);
-            reader.onerror = error => reject(error);
-            reader.readAsText(input.files[0]);
-        });
-        promise.then((result) => {
-            result = JSON.parse(result);
-            // make sure the object properties line up
-            if (templateMatch(result)) {
-                start(result.numberOfPlayers, result);  
-            } else {
-                document.getElementById('invalidfiletext').style.display = "inline";
-            }
-        });
+    if (input.files[0].name.lastIndexOf(".txt") !== -1) { // file has to end in .txt
+        const reader = new FileReader();
+        if ('files' in input && input.files.length > 0) { // if the file exists
+            let promise = new Promise(function(resolve, reject) {
+                reader.onload = event => resolve(event.target.result);
+                reader.onerror = error => reject(error);
+                reader.readAsText(input.files[0]);
+            });
+            promise.then((result) => {
+                try {
+                    result = JSON.parse(result);
+                    // make sure the object properties line up
+                    if (templateMatch(result)) {
+                        start(result.numberOfPlayers, result);  
+                    } else {
+                        showInvalidText();
+                    }
+                } catch (e) {
+                    showInvalidText();
+                }
+            });
+        }
+    } else {
+        showInvalidText();
     }
 }
 
 function templateMatch(result) {
+    if (Object.keys(result).length !== 3) { // ensure there are no extra properties
+        return false;
+    }
     if (!Number.isInteger(result?.numberOfPlayers)) { // this checks for missing numberOfPlayers
         return false;
     }
@@ -50,7 +61,7 @@ function templateMatch(result) {
     let currentBuildings = Array(15).fill(0);
     if (Array.isArray(result?.players) && result.players.length === result.numberOfPlayers) {
         for (let i = 0; i < result.numberOfPlayers; i++) {
-            if (typeof(result.players[i]) !== 'object' || !Number.isInteger(result.players[i]?.balance || result.players[i].balance < 0)) { // verify each player is an object and balance is an integer
+            if (typeof(result.players[i]) !== 'object' || !Number.isInteger(result.players[i]?.balance) || result.players[i].balance < 0) { // verify each player is an object and balance is an integer
                 return false;
             }
             if (!Array.isArray(result.players[i]?.establishments) || result.players[i].establishments.length !== 15) { // verify their establishments
@@ -79,14 +90,15 @@ function templateMatch(result) {
     } else {
         return false;
     }
-    if (!currentBuildings.every(numberOfBuildings => numberOfBuildings <= 6)) { // check total number of each establishment
+    if (!currentBuildings.every(counter => counter <= 6)) { // check total number of each establishment
         return false;
     }
     if (!Number.isInteger(result?.playerCounter) || (result.playerCounter < 0 || result.playerCounter >= result.numberOfPlayers)) { // verify playerCounter is within the bounds of numberOfPlayers
         return false;
     }
-    if (!result.every(key => key === 'players' || key === 'playerCounter' || key === 'numberOfPlayers')) { // check if there is an invalid key
-        return false;
-    }
     return true;
+}
+
+function showInvalidText() {
+    document.getElementById('invalidfiletext').style.display = "inline";
 }
