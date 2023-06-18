@@ -1,12 +1,9 @@
 import { end } from './end.js'
 
-const currentBuildings = Array(15).fill(6); // 6th, 7th, and 8th indexes never get used
-
 export function buy(building_num, player, playerCounter, buildings) {// * * 15 16 17 18 are the landmarks
     const { name, displayName, cost } = buildings[building_num];
     player.balance -= cost;
     if (building_num < 15) { // bought an establishment
-        currentBuildings[building_num]--;
         player.establishments[building_num]++;
         document.querySelector(`#${name}${playerCounter + 1}`).innerHTML = `${displayName}: ${player.establishments[building_num]}`;
     } else { // bought a landmark
@@ -31,17 +28,25 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
     document.getElementById('roll2dicecheckbox').disabled = true;
 }
 
-export function enableShop(player, buildings) {
+export function enableShop(players, player, buildings) {
     for (let i = 0; i < 15; i++) { // establishments
         const { name, cost } = buildings[i];
         if (i === 6 || i === 7 || i === 8) { // 6, 7, 8 are purple establishments
             document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.establishments[i] === 1;
         } else {
-            document.getElementById(`buy${name}button`).disabled = player.balance < cost || currentBuildings[i] === 0;
+            document.getElementById(`buy${name}button`).disabled = player.balance < cost || maximumEstablishments(players, i);
         }
     }
     for (let i = 15; i < 19; i++) { // landmarks
         const { name, cost } = buildings[i];
         document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.landmarks[i - 15];
     }
+}
+
+function maximumEstablishments(players, index) {
+    let sum = 0;
+    for (let i = 0; i < players.length; i++) {
+        sum += players[i].establishments[index];
+    }
+    return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
 }
