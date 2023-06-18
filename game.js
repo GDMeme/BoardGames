@@ -7,5 +7,6 @@ export class Game {
             this.players[i] = new Player();
         }
         this.playerCounter = 0; // * * playerCounter is 0 indexed!!
+        this.numberOfPlayers = numberOfPlayers;
     }
 }
