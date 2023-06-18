@@ -1,4 +1,4 @@
-import { Player } from './player.js';
+import { Game } from './game.js';
 
 import { buy } from './shop.js';
 
@@ -46,13 +46,7 @@ export function start(numberOfPlayers) {
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    const players = Array(numberOfPlayers);
-
-    for (let i = 0; i < numberOfPlayers; i++) {
-        players[i] = new Player();
-    }
-
-    let playerCounter = 0; // * * playerCounter is 0 indexed!!!
+    const game = new Game(numberOfPlayers);
 
     let income;
     document.getElementById('rerollbutton').onclick = function () {
@@ -61,27 +55,27 @@ export function start(numberOfPlayers) {
 
         // subtract the income they got from the original roll
         for (let i = 0; i < players.length; i++) {
-            players[i].balance -= income[i];
+            game.players[i].balance -= income[i];
         }
-        updateBalances(players);
+        updateBalances(game.players);
 
-        playerCounter = endTurn(players, playerCounter, numberOfPlayers, true);
-        playerTurn(players, playerCounter, false, buildings);
+        game.playerCounter = endTurn(game.players, game.playerCounter, numberOfPlayers, true);
+        playerTurn(game.players, game.playerCounter, false, buildings);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
-        income = playerTurn(players, playerCounter, true, buildings); // need to keep track of income to account for rerolling
+        income = playerTurn(game.players, game.playerCounter, true, buildings); // need to keep track of income to account for rerolling
     }
 
     const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
-            buy(i, players[playerCounter], playerCounter, buildings);
+            buy(i, game.players[game.playerCounter], game.playerCounter, buildings);
         }
     }
 
     document.getElementById('endturnbutton').onclick = function() {
-        playerCounter = endTurn(players, playerCounter, numberOfPlayers, false);
+        game.playerCounter = endTurn(game.players, game.playerCounter, numberOfPlayers, false);
     }
 }
