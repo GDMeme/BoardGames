@@ -4,7 +4,7 @@ import { buy } from './shop.js';
 
 import { playerTurn } from './playerturn.js';
 
-import { updateBalances } from './income.js';
+import { updateBalances, updateEstablishmentsLandmarks } from './income.js';
 
 import { endTurn } from './endturn.js';
 
@@ -30,12 +30,13 @@ const buildings = [
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
 ];
 
-export function start(numberOfPlayers) {
+export function start(numberOfPlayers, existingGame) {
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('startgametext').style.display = "inline";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
+    document.getElementById('savegamebutton').style.display = "inline"; // show the save game button
     if (numberOfPlayers === 4) {
         document.getElementById('player3inventory').style.visibility = "visible";
         document.getElementById('player4inventory').style.visibility = "visible";
@@ -46,7 +47,13 @@ export function start(numberOfPlayers) {
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    const game = new Game(numberOfPlayers);
+    let game = new Game(numberOfPlayers);
+    if (existingGame) {
+        game = Object.assign(game, JSON.parse(existingGame));
+        updateBalances(game.players);
+        updateEstablishmentsLandmarks(game.players, buildings);
+    }
+
 
     let income;
     document.getElementById('rerollbutton').onclick = function () {
@@ -77,5 +84,11 @@ export function start(numberOfPlayers) {
 
     document.getElementById('endturnbutton').onclick = function() {
         game.playerCounter = endTurn(game.players, game.playerCounter, numberOfPlayers, false);
+    }
+
+    document.getElementById('savegamebutton').onclick = function() {
+        document.getElementById('savegametext').style.display = "inline";
+        document.querySelector('#temporarysavegametext').innerHTML = JSON.stringify(game);
+        document.getElementById('savegamebutton').disabled = true; // disable the save button
     }
 }

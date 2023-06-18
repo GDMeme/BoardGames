@@ -20,6 +20,17 @@
                 <p>
                     <button id="submitplayersbutton" disabled>Submit</button>
                 </p>
+                <div>
+                    <font size="6">
+                        OR
+                    </font>
+                </div>
+                <p>
+                    Continue playing an existing game!
+                </p>
+                <div>
+                    <input type="file" id="existinggamefile" style="text-align-last: center">
+                </div>
             </div>
             <div style="justify-content: space-between; display: none; margin: 0px 150px" id="player12inventory">
                 <div>
@@ -468,11 +479,30 @@
                         Player 4 received x from green/blue establishments. 
                     </div>
                     <br id="greenblueincomebreak" style="display: none">
-                    <button id="endturnbutton" disabled style="display: none">
-                        <font size="6">
-                            End Turn
-                        </font>
-                    </button>
+                    <div>
+                        <button id="endturnbutton" disabled style="display: none">
+                            <font size="6">
+                                End Turn
+                            </font>
+                        </button>
+                    </div>
+                    <br>
+                    <div>
+                        <button id="savegamebutton" disabled style="display: none">
+                            <font size="4">
+                                Save Game
+                            </font>
+                        </button>
+                    </div>
+                    <div id="savegametext" style="display: none">
+                        <div id="permanentsavegametext">
+                            Copy the text below into a .txt file to save your game!
+                        </div>
+                        <br>
+                        <div id="temporarysavegametext">
+                            Save Game Text Goes Here
+                        </div>
+                    </div>
                 </div>
                 <div id="player4inventory" style="visibility: hidden">
                     <div>

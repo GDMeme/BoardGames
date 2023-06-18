@@ -44,6 +44,17 @@ export function updateBalances(players) {
     }
 }
 
+export function updateEstablishmentsLandmarks(players, buildings) {
+    for (let i = 0; i < players.length; i++) {
+        for (let j = 0; j < 15; j++) {
+            document.querySelector(`#${buildings[j].name}${i + 1}`).innerHTML = `${buildings[j].displayName}: ${players[i].establishments[j]}`;
+        }
+        for (let j = 15; j < 19; j++) {
+            document.querySelector(`#${buildings[j].name}${i + 1}`).innerHTML = `${buildings[j].displayName}: ${players[i].landmarks[j - 15] ? 'Unlocked' : 'Locked'}`;
+        }
+    }
+}
+
 export function income(roll, players, playerCounter, buildings) {
     let redIncome = Array(players.length).fill(0);
     let greenBlueIncome = Array(players.length).fill(0);
@@ -162,7 +173,7 @@ export function income(roll, players, playerCounter, buildings) {
 
                         // enable shop buttons
                         document.getElementById('buysomething').style.display = "inline";
-                        enableShop(currentPlayer, buildings);
+                        enableShop(players, currentPlayer, buildings);
 
                         document.getElementById(`businessplayer${playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
 

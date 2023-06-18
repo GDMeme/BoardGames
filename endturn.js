@@ -30,5 +30,8 @@ export function endTurn(players, playerCounter, numberOfPlayers, flag) { // flag
     // check landmarks
     document.getElementById('roll2dicecheckbox').disabled = !players[playerCounter].landmarks[0];
 
+    // enable the save game button
+    document.getElementById('savegamebutton').disabled = false;
+
     return playerCounter;
 }
