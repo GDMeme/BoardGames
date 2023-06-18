@@ -37,6 +37,7 @@ export function start(numberOfPlayers, existingGame) {
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
     document.getElementById('savegamebutton').style.display = "inline"; // show the save game button
+    document.getElementById('invalidfiletext').style.display = "inline";
     if (numberOfPlayers === 4) {
         document.getElementById('player3inventory').style.visibility = "visible";
         document.getElementById('player4inventory').style.visibility = "visible";
@@ -49,11 +50,10 @@ export function start(numberOfPlayers, existingGame) {
 
     let game = new Game(numberOfPlayers);
     if (existingGame) {
-        game = Object.assign(game, JSON.parse(existingGame));
+        game = Object.assign(game, existingGame);
         updateBalances(game.players);
         updateEstablishmentsLandmarks(game.players, buildings);
     }
-
 
     let income;
     document.getElementById('rerollbutton').onclick = function () {
