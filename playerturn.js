@@ -31,10 +31,10 @@ function rollDice(checked, counter, rollNumber, players, playerCounter, building
             if (firstRoll === secondRoll && currentPlayer.landmarks[2] && counter === 10) {
                 document.getElementById('rolldoubles').style.display = "inline";
             }
-            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${rollNumber}! </u>`;
+            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${newRollNumber}! </u>`;
         } else {
             newRollNumber = Math.floor(Math.random() * 6 + 1);
-            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${rollNumber}! </u>`;
+            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${newRollNumber}! </u>`;
         }
         setTimeout(rollDice, counter !== 10 ? 100 : 0, checked, counter, newRollNumber, players, playerCounter, buildings, currentPlayer);
     } else {
