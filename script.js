@@ -23,7 +23,7 @@ function loadGame(event) {
 	const input = event.target;
     if (input.files[0].name.lastIndexOf(".txt") !== -1) { // file has to end in .txt
         const reader = new FileReader();
-        if ('files' in input && input.files.length > 0) { // if the file exists
+        if ('files' in input && input.files.length > 0) { // check for empty file
             let promise = new Promise(function(resolve, reject) {
                 reader.onload = event => resolve(event.target.result);
                 reader.onerror = error => reject(error);
