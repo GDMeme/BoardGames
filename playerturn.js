@@ -33,13 +33,13 @@ function rollDice(checked, counter, rollNumber, players, playerCounter, building
             }
             document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${rollNumber}! </u>`;
         } else {
-            rollNumber = Math.floor(Math.random() * 6 + 1);
+            newRollNumber = Math.floor(Math.random() * 6 + 1);
             document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${rollNumber}! </u>`;
         }
         setTimeout(rollDice, counter !== 10 ? 100 : 0, checked, counter, newRollNumber, players, playerCounter, buildings, currentPlayer);
     } else {
         // everyone collects income
-        let currentIncome = income(newRollNumber, players, playerCounter, buildings);
+        let currentIncome = income(rollNumber, players, playerCounter, buildings);
         if (!currentIncome.every(income => income === 0)) {
             document.getElementById('incomesummary').style.display = "inline";
         }
