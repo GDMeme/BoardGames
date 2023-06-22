@@ -2,7 +2,10 @@ import { income } from './income.js';
 
 import { enableShop } from './shop.js'
 
-export function playerTurn(players, playerCounter, flag, buildings) { // flag true means regular turn, not reroll    
+export function playerTurn(players, playerCounter, flag, buildings) { // flag true means regular turn, not reroll   
+    document.getElementById('savegametext').style.display = "none";
+    document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
+    document.getElementById('savegamebutton').disabled = true; // disable the save game button 
     let currentPlayer = players[playerCounter];
     
     // rolling stuff
@@ -31,9 +34,6 @@ function rollDice(checked, counter, rollNumber, players, playerCounter, building
         }
         setTimeout(rollDice, counter !== 10 ? 100 : 0, checked, counter, newRollNumber, players, playerCounter, buildings, currentPlayer, flag);
     } else {
-        document.getElementById('savegamebutton').disabled = true; // disable the save game button
-        document.getElementById('savegametext').style.display = "none";
-        document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
         document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
         document.getElementById('roll2dicecheckbox').disabled = !(flag && currentPlayer.landmarks[3] && currentPlayer.landmarks[0]); // able to roll two dice if rerolling, radio tower and train station
