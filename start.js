@@ -55,6 +55,28 @@ export function start(numberOfPlayers, existingGame) {
         updateEstablishmentsLandmarks(game.players, buildings);
     }
 
+    const buttonIDs = buildings.map(building => building.name);
+    for (let i = 0; i < numberOfPlayers; i++) {
+        for (let j = 0; j < 15; j++) { // establishments
+            setInterval(() => {
+                if (document.querySelector(`#${buttonIDs[j]}${i + 1}:hover`) != null) {
+                    // TODO: show the corresponding image
+                }
+            }, 10);
+        }
+        for (let j = 15; j < 19; j++) {
+            setInterval(() => {
+                if (document.querySelector(`#${buttonIDs[j]}${i + 1}:hover`) != null) {
+                    if (game.players[i].landmarks[j - 15]) {
+                        // TODO: show the corresponding image
+                    } else {
+                        // TODO: show the corresponding image
+                    }
+                }
+            }, 10);
+        }
+    }
+
     let income;
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
@@ -74,7 +96,6 @@ export function start(numberOfPlayers, existingGame) {
         income = playerTurn(game.players, game.playerCounter, true, buildings); // need to keep track of income to account for rerolling
     }
 
-    const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
