@@ -32,7 +32,7 @@ function rollDice(checked, counter, rollNumber, players, playerCounter, building
             newRollNumber = Math.floor(Math.random() * 6 + 1);
             document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${newRollNumber}! </u>`;
         }
-        setTimeout(rollDice, counter !== 10 ? 100 : 0, checked, counter, newRollNumber, players, playerCounter, buildings, currentPlayer, flag);
+        setTimeout(rollDice, counter !== 10 ? 100 : 0, checked, counter, newRollNumber, players, playerCounter, buildings, currentPlayer, flag); // poll until counter reaches 10
     } else {
         document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
