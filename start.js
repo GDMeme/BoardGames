@@ -53,27 +53,19 @@ export function start(numberOfPlayers, existingGame) {
         game = Object.assign(game, existingGame);
         updateBalances(game.players);
         updateEstablishmentsLandmarks(game.players, buildings);
+
+        document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
     }
 
     const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < numberOfPlayers; i++) {
-        for (let j = 0; j < 15; j++) { // establishments
-            setInterval(() => {
-                if (document.querySelector(`#${buttonIDs[j]}${i + 1}:hover`) != null) {
-                    // TODO: show the corresponding image
-                }
-            }, 10);
-        }
-        for (let j = 15; j < 19; j++) {
-            setInterval(() => {
-                if (document.querySelector(`#${buttonIDs[j]}${i + 1}:hover`) != null) {
-                    if (game.players[i].landmarks[j - 15]) {
-                        // TODO: show the corresponding image
-                    } else {
-                        // TODO: show the corresponding image
-                    }
-                }
-            }, 10);
+        for (let j = 0; j < 19; j++) { // establishmenths
+            document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
+                document.getElementById(`${buttonIDs[j]}image`).style.display = "none";
+            }
+            document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseover = function () {
+                document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "inline";
+            }
         }
     }
 
