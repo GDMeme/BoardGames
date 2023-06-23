@@ -59,7 +59,7 @@ export function start(numberOfPlayers, existingGame) {
 
     const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < numberOfPlayers; i++) {
-        for (let j = 0; j < 19; j++) { // establishmenths
+        for (let j = 0; j < 1; j++) { // establishmenths
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
                 document.getElementById(`${buttonIDs[j]}image`).style.display = "none";
             }
