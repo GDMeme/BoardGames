@@ -59,12 +59,12 @@ export function start(numberOfPlayers, existingGame) {
 
     const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < numberOfPlayers; i++) {
-        for (let j = 0; j < 1; j++) { // establishmenths
+        for (let j = 0; j < 19; j++) { // establishmenths
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
-                document.getElementById(`${buttonIDs[j]}image`).style.display = "none";
+                document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "none";
             }
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseover = function () {
-                document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "inline";
+                document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "inline";
             }
         }
     }
