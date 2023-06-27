@@ -1,19 +1,40 @@
-import { start } from './start.js'
+import { start } from './start.js';
 
 document.getElementById('numberofplayersselect').onchange = function() {
     document.getElementById('submitplayersbutton').disabled = false;
 }
 
+let numberOfPlayers;
+let playerNames = Array(numberOfPlayers);
+
 // this is the whole game
 document.getElementById('submitplayersbutton').onclick = function() {
-    let numberOfPlayers = parseInt(document.getElementById('numberofplayersselect').value);
+    numberOfPlayers = parseInt(document.getElementById('numberofplayersselect').value);
     document.getElementById(`tvplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
     document.getElementById(`tvplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
 
     document.getElementById(`businessplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
     document.getElementById(`businessplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
     
-    start(numberOfPlayers);
+    // getting player names
+    document.getElementById('beforegametext').style.display = "none";
+    document.getElementById('playernametext').style.display = "inline";
+    
+    document.getElementById(`player3name`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
+    document.getElementById(`player4name`).style.display = numberOfPlayers === 4 ? "inline" : "none";
+
+    document.getElementById('submitplayernamesbutton').style.display = "inline";
+}
+
+document.getElementById('submitplayernamesbutton').onclick = function() {
+
+    // processing player names
+    for (let i = 0; i < numberOfPlayers; i++) {
+        playerNames[i] = document.getElementById(`player${i + 1}nameinput`).value === '' ? `Player ${i + 1}` : document.getElementById(`player${i + 1}nameinput`).value;
+    }
+
+    document.getElementById('playernametext').style.display = "none";
+    start(numberOfPlayers, playerNames); // guaranteed to have a value when the button is visible
 }
 
 // loading an existing game

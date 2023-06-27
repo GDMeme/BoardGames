@@ -30,9 +30,9 @@ const buildings = [
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
 ];
 
-export function start(numberOfPlayers, existingGame) {
-    document.getElementById('beforegametext').style.display = "none";
+export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
     document.getElementById('startgametext').style.display = "inline";
+    document.querySelector('#titletext').innerHTML = "<u>Machi Koro</u>";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
@@ -48,8 +48,13 @@ export function start(numberOfPlayers, existingGame) {
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    let game = new Game(numberOfPlayers);
-    if (existingGame) {
+    let game;
+    if (Array.isArray(existingGame)) { // existingGame represents the player names
+        game = new Game(numberOfPlayers, existingGame);
+        for (let i = 0; i < numberOfPlayers; i++) {
+            document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${existingGame[i]} </font></u>`
+        }
+    } else if (existingGame) { // existingGame represents the saved game
         game = Object.assign(game, existingGame);
         updateBalances(game.players);
         updateEstablishmentsLandmarks(game.players, buildings);
@@ -59,7 +64,7 @@ export function start(numberOfPlayers, existingGame) {
 
     const buttonIDs = buildings.map(building => building.name);
     for (let i = 0; i < numberOfPlayers; i++) {
-        for (let j = 0; j < 19; j++) { // establishmenths
+        for (let j = 0; j < 19; j++) { // establishments
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
                 document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "none";
             }

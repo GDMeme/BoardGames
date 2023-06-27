@@ -5,14 +5,18 @@
     <title>Machi Koro</title>
 </head>
 <div style="text-align: center">
-    <h1 id="titletext">Welcome to Machi Koro!</h1>
+    <h1 id="titletext">
+        <u>
+            Welcome to Machi Koro
+        </u>
+    </h1>
 
     <body style="background-color: #CCCCCC">
         <div id="entiregame">
             <div id="beforegametext">
                 <p>How many people will be playing?</p>
                 <select id="numberofplayersselect">
-                    <option disabled selected value="1"> --select an option -- </option>
+                    <option disabled selected> --select an option -- </option>
                     <option value="2">2</option>
                     <option value="3">3</option>
                     <option value="4">4</option>
@@ -35,9 +39,38 @@
                     Invalid save file detected! Try again.
                 </div>
             </div>
+            <div id="playernametext" style="display: none">
+                <p>
+                    <u>
+                        Enter the names of your players!
+                    </u>
+                </p>
+                <p>
+                    Player 1:
+                    <input type="text" id="player1nameinput" size="15">
+                </p>
+                <p>
+                    Player 2:
+                    <input type="text" id="player2nameinput" size="15">
+                </p>
+                <p id="player3name" style="display: none">
+                    Player 3:
+                    <input type="text" id="player3nameinput" size="15">
+                </p>
+                <div id="player4name" style="display: none">
+                    <br>
+                    <p>
+                        Player 4:
+                        <input type="text" id="player4nameinput" size="15">
+                    </p>
+                </div>
+                <p>
+                    <button id="submitplayernamesbutton" style="display: none">Submit</button>
+                </p>
+            </div>
             <div style="justify-content: space-between; display: none; margin: 0px 150px" id="player12inventory">
-                <div>
-                    <div>
+                <div style="border: thin solid black; padding: 25px">
+                    <div id="player1text">
                         <u>
                             <font size="6"> Player 1 </font>
                         </u>
@@ -266,8 +299,8 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <div>
+                <div style="border: thin solid black; padding: 25px">
+                    <div id="player2text">
                         <u>
                             <font size="6"> Player 2 </font>
                         </u>
@@ -338,8 +371,8 @@
                 </div>
             </div>
             <div style="justify-content: space-between; display: none; margin: 20px 150px" id="player34inventory">
-                <div id="player3inventory" style="visibility: hidden">
-                    <div>
+                <div id="player3inventory" style="visibility: hidden; border: thin solid black; padding: 25px">
+                    <div id="player3text">
                         <u>
                             <font size="6"> Player 3 </font>
                         </u>
@@ -532,8 +565,8 @@
                         </div>
                     </div>
                 </div>
-                <div id="player4inventory" style="visibility: hidden">
-                    <div>
+                <div id="player4inventory" style="visibility: hidden; border: thin solid black; padding: 25px">
+                    <div id="player4text">
                         <u>
                             <font size="6"> Player 4 </font>
                         </u>
