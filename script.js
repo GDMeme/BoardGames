@@ -26,6 +26,15 @@ document.getElementById('submitplayersbutton').onclick = function() {
     document.getElementById('submitplayernamesbutton').style.display = "inline";
 }
 
+for (let i = 0; i < 3; i++) {
+    document.getElementById(`player${i + 2}nameinput`).addEventListener("keypress", function(event) {
+        if (event.key === "Enter" && i + 2 === numberOfPlayers) {
+            event.preventDefault();
+            document.getElementById('submitplayernamesbutton').click();
+        }
+    })
+}
+
 document.getElementById('submitplayernamesbutton').onclick = function() {
 
     // processing player names

@@ -67,9 +67,19 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         for (let j = 0; j < 19; j++) { // establishments
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
                 document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "none";
+                document.getElementById('cardexplanation').style.display = "none";
+                document.getElementById('cardexplanation2').style.display = "none";
+                if (j > 14) {
+                    document.getElementById('dicerollexplanation').style.display = "none";
+                }
             }
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseover = function () {
                 document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "inline";
+                document.getElementById('cardexplanation').style.display = "flex";
+                document.getElementById('cardexplanation2').style.display = "flex";
+                if (j > 14) {
+                    document.getElementById('dicerollexplanation').style.display = "none";
+                }
             }
         }
     }
