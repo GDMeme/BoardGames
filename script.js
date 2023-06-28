@@ -70,13 +70,16 @@ function loadGame(event) {
 }
 
 function templateMatch(result) {
-    if (Object.keys(result).length !== 3) { // ensure there are no extra properties
+    if (Object.keys(result).length !== 4) { // ensure there are no extra properties
         return false;
     }
-    if (!Number.isInteger(result?.numberOfPlayers)) { // this checks for missing numberOfPlayers
+    if (!Number.isInteger(result?.numberOfPlayers)) { // checks for missing numberOfPlayers
         return false;
     }
     if (result.numberOfPlayers < 2 || result.numberOfPlayers > 4) { // won't get here if numberOfPlayers doesn't exist
+        return false;
+    }
+    if (!Array.isArray(result?.playerNames) || result.playerNames.length !== result.numberOfPlayers) { // checks playerName property
         return false;
     }
     let currentBuildings = Array(15).fill(0);
