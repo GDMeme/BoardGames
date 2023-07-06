@@ -36,7 +36,6 @@ for (let i = 0; i < 3; i++) {
 }
 
 document.getElementById('submitplayernamesbutton').onclick = function() {
-
     // processing player names
     for (let i = 0; i < numberOfPlayers; i++) {
         playerNames[i] = document.getElementById(`player${i + 1}nameinput`).value === '' ? `Player ${i + 1}` : document.getElementById(`player${i + 1}nameinput`).value;
@@ -63,12 +62,12 @@ function loadGame(event) {
                 try {
                     result = JSON.parse(result);
                     // make sure the object properties line up
-                    if (templateMatch(result)) {
-                        start(result.numberOfPlayers, result);  
-                    } else {
-                        showInvalidText();
-                    }
                 } catch (e) {
+                    showInvalidText();
+                }
+                if (templateMatch(result)) {
+                    start(result.numberOfPlayers, result);  
+                } else {
                     showInvalidText();
                 }
             });
@@ -91,7 +90,7 @@ function templateMatch(result) {
     if (!Array.isArray(result?.playerNames) || result.playerNames.length !== result.numberOfPlayers) { // checks playerName property
         return false;
     }
-    let currentBuildings = Array(15).fill(0);
+    let maxEstablishments = Array(15).fill(0); // to check each building limit
     if (Array.isArray(result?.players) && result.players.length === result.numberOfPlayers) {
         for (let i = 0; i < result.numberOfPlayers; i++) {
             if (typeof(result.players[i]) !== 'object' || !Number.isInteger(result.players[i]?.balance) || result.players[i].balance < 0) { // verify each player is an object and balance is an integer
@@ -109,7 +108,7 @@ function templateMatch(result) {
                         return false;
                     }
                 }
-               currentBuildings[j] += result.players[i].establishments[j];
+               maxEstablishments[j] += result.players[i].establishments[j];
             }
             if (!Array.isArray(result.players[i]?.landmarks) || result.players[i].landmarks.length !== 4) { // verify their landmarks
                 return false;
@@ -123,7 +122,7 @@ function templateMatch(result) {
     } else {
         return false;
     }
-    if (!currentBuildings.every(numberOfBuildings => numberOfBuildings <= 6)) { // check total number of each establishment
+    if (!maxEstablishments.every(numberOfBuildings => numberOfBuildings <= 6)) { // check total number of each establishment
         return false;
     }
     if (!Number.isInteger(result?.playerCounter) || (result.playerCounter < 0 || result.playerCounter >= result.numberOfPlayers)) { // verify playerCounter is within the bounds of numberOfPlayers

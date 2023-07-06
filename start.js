@@ -32,6 +32,7 @@ const buildings = [
 
 export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
     document.getElementById('startgametext').style.display = "inline";
+    document.getElementById('beforegametext').style.display = "none";
     document.querySelector('#titletext').innerHTML = "<u>Machi Koro</u>";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
@@ -48,16 +49,19 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    let game;
+    let game = new Game(numberOfPlayers, existingGame); // this is fine (if saved game, game.playerNames will be undefined but won't produce undefined behaviour)
     if (Array.isArray(existingGame)) { // existingGame represents the player names
-        game = new Game(numberOfPlayers, existingGame);
         for (let i = 0; i < numberOfPlayers; i++) {
             document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${existingGame[i]} </font></u>`
         }
-    } else if (existingGame) { // existingGame represents the saved game
+    } else { // existingGame represents the saved game
         game = Object.assign(game, existingGame);
         updateBalances(game.players);
         updateEstablishmentsLandmarks(game.players, buildings);
+
+        for (let i = 0; i < numberOfPlayers; i++) {
+            document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${game.playerNames[i]} </font></u>`
+        }   
 
         document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
     }
