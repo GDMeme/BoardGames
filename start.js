@@ -32,7 +32,6 @@ const buildings = [
 
 export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
     document.getElementById('startgametext').style.display = "inline";
-    document.getElementById('beforegametext').style.display = "none";
     document.querySelector('#titletext').innerHTML = "<u>Machi Koro</u>";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
     document.getElementById('player12inventory').style.display = "flex";
@@ -80,6 +79,7 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
                 document.getElementById('cardexplanation').style.display = "flex";
                 document.getElementById('cardexplanation2').style.display = "flex";
                 document.getElementById('dicerollexplanation').style.display = j > 14 ? "none" : "flex";
+                document.getElementById('extraindent').style.display = j > 14 ? "flex" : "none";
             }
         }
     }

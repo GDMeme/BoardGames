@@ -66,6 +66,7 @@ function loadGame(event) {
                     showInvalidText();
                 }
                 if (templateMatch(result)) {
+                    document.getElementById('beforegametext').style.display = "none";
                     start(result.numberOfPlayers, result);  
                 } else {
                     showInvalidText();
