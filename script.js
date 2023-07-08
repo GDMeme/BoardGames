@@ -38,7 +38,7 @@ for (let i = 0; i < 3; i++) {
 document.getElementById('submitplayernamesbutton').onclick = function() {
     // processing player names
     for (let i = 0; i < numberOfPlayers; i++) {
-        playerNames[i] = document.getElementById(`player${i + 1}nameinput`).value === '' ? `Player ${i + 1}` : document.getElementById(`player${i + 1}nameinput`).value;
+        playerNames[i] = document.getElementById(`player${i + 1}nameinput`).value || `Player ${i + 1}`;
     }
 
     document.getElementById('playernametext').style.display = "none";
