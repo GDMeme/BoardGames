@@ -1,22 +1,25 @@
-import { end } from './end.js'
+import { end } from './end.js';
 
-export function buy(building_num, player, playerCounter, buildings) {// * * 15 16 17 18 are the landmarks
-    const { name, displayName, cost } = buildings[building_num];
-    player.balance -= cost;
+import * as C from './constants.js';
+
+export function buy(building_num, game) {// * * 15 16 17 18 are the landmarks
+    const { name, displayName, cost } = C.buildings[building_num];
+    let currentPlayer = game.players[game.playerCounter];
+    currentPlayer.balance -= cost;
     if (building_num < 15) { // bought an establishment
-        player.establishments[building_num]++;
-        document.querySelector(`#${name}${playerCounter + 1}`).innerHTML = `${displayName}: ${player.establishments[building_num]}`;
+        currentPlayer.establishments[building_num]++;
+        document.querySelector(`#${name}${game.playerCounter + 1}`).innerHTML = `${displayName}: ${currentPlayer.establishments[building_num]}`;
     } else { // bought a landmark
-        player.landmarks[building_num - 15] = true;
-        document.querySelector(`#${name}${playerCounter + 1}`).innerHTML = `${displayName}: Unlocked`;
+        currentPlayer.landmarks[building_num - 15] = true;
+        document.querySelector(`#${name}${game.playerCounter + 1}`).innerHTML = `${displayName}: Unlocked`;
 
         // check if winner
-        if (player.landmarks.every(v => v === true)) {
+        if (currentPlayer.landmarks.every(v => v === true)) {
             document.getElementById('entiregame').style.display = "none";
-            end(playerCounter);
+            end(game.playerCounter);
         }
     }
-    document.querySelector(`#balance${playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`; // since playerCounter is 0 indexed
+    document.querySelector(`#balance${game.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${currentPlayer.balance}</font>`; // since playerCounter is 0 indexed
 
     // disable all shop buttons after buying something
     document.querySelectorAll('.shop').forEach(button => button.disabled = true);
@@ -28,22 +31,23 @@ export function buy(building_num, player, playerCounter, buildings) {// * * 15 1
     document.getElementById('roll2dicecheckbox').disabled = true;
 }
 
-export function enableShop(players, player, buildings) {
+export function enableShop(game) {
+    let currentPlayer = game.players[game.playerCounter];
     for (let i = 0; i < 15; i++) { // establishments
-        const { name, cost } = buildings[i];
+        const { name, cost } = C.buildings[i];
         if (i === 6 || i === 7 || i === 8) { // 6, 7, 8 are purple establishments
-            document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.establishments[i] === 1;
+            document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || currentPlayer.establishments[i] === 1;
         } else {
-            document.getElementById(`buy${name}button`).disabled = player.balance < cost || maximumEstablishments(players, i);
+            document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || maximumEstablishments(game.players, i);
         }
     }
     for (let i = 15; i < 19; i++) { // landmarks
-        const { name, cost } = buildings[i];
-        document.getElementById(`buy${name}button`).disabled = player.balance < cost || player.landmarks[i - 15];
+        const { name, cost } = C.buildings[i];
+        document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || currentPlayer.landmarks[i - 15];
     }
 }
 
-function maximumEstablishments(players, index) {
+function maximumEstablishments(players, index) { // fine to send players since only reading, not writing
     let sum = 0;
     for (let i = 0; i < players.length; i++) {
         sum += players[i].establishments[index];

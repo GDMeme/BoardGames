@@ -8,27 +8,7 @@ import { updateBalances, updateEstablishmentsLandmarks } from './income.js';
 
 import { endTurn } from './endturn.js';
 
-const buildings = [
-    {name: 'wheatfield', displayName: 'Wheat Field', cost: 1, income: 1, shopping: false, colour: 'blue', trigger: [1]},
-    {name: 'ranch', displayName: 'Ranch', cost: 1, income: 1, shopping: false, colour: 'blue', trigger: [2]},
-    {name: 'bakery', displayName: 'Bakery', cost: 1, income: 1, shopping: true, trigger: [2, 3]}, // if colour is not blue, it must be green
-    {name: 'cafe', displayName: 'Cafe', cost: 2}, // red is special case
-    {name: 'conveniencestore', displayName: 'Convenience Store', cost: 2, income: 3, shopping: true, trigger: [4]},
-    {name: 'forest', displayName: 'Forest', cost: 3, income: 1, shopping: false, colour: 'blue', trigger: [5]},
-    {name: 'stadium', displayName: 'Stadium', cost: 6}, // purples are special case
-    {name: 'tvstation', displayName: 'TV Station', cost: 7},
-    {name: 'businesscenter', displayName: 'Business Center', cost: 8},
-    {name: 'cheesefactory', displayName: 'Cheese Factory', cost: 5, income: [1], multiplier: 3, trigger: [7]}, // don't need shopping since income is array
-    {name: 'furniturefactory', displayName: 'Furniture Factory', cost: 3, income: [5, 11], multiplier: 3, trigger: [8]},
-    {name: 'mine', displayName: 'Mine', cost: 6, income: 5, shopping: false, colour: 'blue', trigger: [9]},
-    {name: 'familyrestaurant', displayName: 'Family Restaurant', cost: 3}, // red is special case
-    {name: 'appleorchard', displayName: 'Apple Orchard', cost: 3, income: 3, shopping: false, colour: 'blue', trigger: [10]},
-    {name: 'fruitandvegetablemarket', displayName: 'Fruit and Vegetable Market', cost: 2, income: [0, 13], multiplier: 2, trigger: [11, 12]},
-    {name: 'trainstation', displayName: 'Train Station', cost: 4},
-    {name: 'shoppingmall', displayName: 'Shopping Mall', cost: 10},
-    {name: 'amusementpark', displayName: 'Amusement Park', cost: 16},
-    {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
-];
+import * as C from './constants.js'
 
 export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
     document.getElementById('startgametext').style.display = "inline";
@@ -44,6 +24,10 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
     } else if (numberOfPlayers === 3) {
         document.getElementById('player3inventory').style.visibility = "visible";
     } else {
+        // to remove the scroll bar
+        document.querySelector('#player3inventory').innerHTML = ""; 
+        document.querySelector('#player4inventory').innerHTML = "";
+        
         document.getElementById('player3inventory').style.visibility = "hidden";
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
@@ -56,7 +40,7 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
     } else { // existingGame represents the saved game
         game = Object.assign(game, existingGame);
         updateBalances(game.players);
-        updateEstablishmentsLandmarks(game.players, buildings);
+        updateEstablishmentsLandmarks(game); // TODO: fix this line so that updateEstablishmentsLandmarks directly accesses the constant
 
         for (let i = 0; i < numberOfPlayers; i++) {
             document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${game.playerNames[i]} </font></u>`
@@ -65,7 +49,7 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
     }
 
-    const buttonIDs = buildings.map(building => building.name);
+    const buttonIDs = C.buildings.map(building => building.name);
     for (let i = 0; i < numberOfPlayers; i++) {
         for (let j = 0; j < 19; j++) { // establishments
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
@@ -95,23 +79,23 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         }
         updateBalances(game.players);
 
-        game.playerCounter = endTurn(game.players, game.playerCounter, numberOfPlayers, true);
-        playerTurn(game.players, game.playerCounter, false, buildings);
+        game.playerCounter = endTurn(game, true); // true means player rerolled
+        playerTurn(game, false);
     }
 
     document.getElementById('rolldicebutton').onclick = function () {
-        income = playerTurn(game.players, game.playerCounter, true, buildings); // need to keep track of income to account for rerolling
+        income = playerTurn(game, true); // need to keep track of income to account for rerolling
     }
 
     for (let i = 0; i < buttonIDs.length; i++) {
         const id = buttonIDs[i];
         document.getElementById(`buy${id}button`).onclick = function() {
-            buy(i, game.players[game.playerCounter], game.playerCounter, buildings);
+            buy(i, game); // TODO: fix this line so that updateEstablishmentsLandmarks directly accesses the constant
         }
     }
 
     document.getElementById('endturnbutton').onclick = function() {
-        game.playerCounter = endTurn(game.players, game.playerCounter, numberOfPlayers, false);
+        game.playerCounter = endTurn(game, false);
     }
 
     document.getElementById('savegamebutton').onclick = function() {
