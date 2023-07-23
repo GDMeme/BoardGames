@@ -64,7 +64,7 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
                 document.getElementById('cardexplanation2').style.display = "flex";
                 document.getElementById('dicerollexplanation').style.display = j > 14 ? "none" : "flex";
                 document.getElementById('extraindent').style.display = j > 14 ? "flex" : "none";
-                document.getElementById('imgWrap').style.margin = '0px ' + (j < 15 ? '-200px' : '-150px') + ' auto';
+                document.getElementById('imgWrap').style.margin = '0px ' + (document.getElementById('incomesummary').style.display === "inline" ? (j < 15 ? '-90px' : '-40') : (j < 15 ? '-200px' : '-150px')) + ' auto';
             }
         }
     }
