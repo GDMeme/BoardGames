@@ -1,4 +1,6 @@
-export function endTurn(game, flag) { // flag true means the player rerolled
+export function endTurn(game, flag) { // flag true means the player rolled doubles
+    document.getElementById('rolldicebutton').style.display = "inline";
+
     if ((document.getElementById('rolldoubles').style.display !== "inline") && !flag) { // amusement park did not activate
         game.playerCounter++;
     } // otherwise, don't increment game.playerCounter

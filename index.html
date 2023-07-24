@@ -11,30 +11,57 @@
             Welcome to Machi Koro
         </u>
     </h1>
-    <button id="testbutton">
-        test button
-    </button>
     <body style="background-color: #CCCCCC">
+        <button class="openchat" id="openchatbutton" style="display: none">Chat</button>
+        <div class="chatpopup" id="chat" style="text-align: left;">
+            <form class="form-container">
+                <h1>Chat</h1>
+
+                <label for="sendmessage"><u>Chat History</u></label>
+                <textarea id="chathistory" disabled></textarea>
+                <input type="text" id="sendmessage" style="position: absolute; bottom: 90px; right: 10px; width: 280px" placeholder="Send a message...">
+                <br> 
+                <br> 
+                <button type="button" class="btn cancel" id="closemessagebutton">Close</button>
+            </form>
+        </div>
         <div id="entiregame">
-            <div id="beforegametext">
-                <p>How many people will be playing?</p>
-                <select id="numberofplayersselect">
-                    <option disabled selected> --select an option -- </option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                </select>
+            <div id="playernametext" style="display: none">
                 <p>
-                    <button id="submitplayersbutton" disabled>Submit</button>
+                    <u>
+                        Enter your name!
+                    </u>
                 </p>
-                <div>
-                    <font size="6">
-                        OR
-                    </font>
-                </div>
                 <p>
-                    Continue playing an existing game!
+                    <input type="text" id="player1nameinput" size="15">
                 </p>
+                <p>
+                    <button id="submitplayernamebutton" style="display: none">Submit</button>
+                </p>
+            </div>
+            <div id="roombuttons" style="display: none">
+                <button id="createroombutton">
+                    Create Room!
+                </button>
+                <button id="joinroombutton">
+                    Join Room!
+                </button>
+            </div>
+            <div id="waiting" style="display: none">
+                <p>
+                    Waiting for other people...
+                </p>
+            </div>
+            <button id="testbutton">
+                click me
+            </button>
+            <div id="availableroomstext" style="display: none">
+                Click a button to join a room!
+            </div>
+            <div id="startgame" style="display: none">
+                <button id="startgamebutton">
+                    Start Game!
+                </button>
                 <div>
                     <input type="file" id="existinggamefile" onclick="this.value=null;" style="text-align-last: center">
                 </div>
@@ -42,46 +69,15 @@
                     Invalid save file detected! Try again.
                 </div>
             </div>
-            <div id="playernametext" style="display: none">
-                <p>
-                    <u>
-                        Enter the names of your players!
-                    </u>
-                </p>
-                <p>
-                    Player 1:
-                    <input type="text" id="player1nameinput" size="15">
-                </p>
-                <p>
-                    Player 2:
-                    <input type="text" id="player2nameinput" size="15">
-                </p>
-                <p id="player3name" style="display: none">
-                    Player 3:
-                    <input type="text" id="player3nameinput" size="15">
-                </p>
-                <div id="player4name" style="display: none">
-                    <br>
-                    <p>
-                        Player 4:
-                        <input type="text" id="player4nameinput" size="15">
-                    </p>
-                </div>
-                <p>
-                    <button id="submitplayernamesbutton" style="display: none">Submit</button>
-                </p>
-            </div>
-            <div style="justify-content: space-between; display: none; margin: 0px 150px" id="player12inventory">
+            <div style="justify-content: space-between; margin: 0px 150px; display: none" id="player12inventory">
                 <div style="border: thin solid black; padding: 25px">
-                    <div id="player1text">
+                    <div id="player1text" style="font-size: 30px">
                         <u>
-                            <font size="6"> Player 1 </font>
+                            Player 1
                         </u>
                     </div>
-                    <div id="balance1">
-                        <font size="5">
+                    <div id="balance1" style="font-size: 25px">
                             Balance: 3
-                        </font>
                     </div>
                     <div id="wheatfield1">
                         Wheat Field: 1
@@ -145,14 +141,14 @@
                 <div>
                     <div id="startgametext" style="display: none">
                         <p>
-                        <div id="playerturn">
-                            Player 1's turn!
-                        </div>
+                            <div id="playerturn">
+                                Player 1's turn!
+                            </div>
                         </p>
                         <p>
                         <div>
                             <input type="checkbox" id="roll2dicecheckbox" disabled>
-                            Click here to roll 2 dice instead!
+                                Click here to roll 2 dice instead!
                             </input>
                             <button id="rerollbutton" disabled>
                                 Click here to reroll your dice!
@@ -160,21 +156,21 @@
                         </div>
                         </p>
                         <p>
-                        <div>
-                            <button id="rolldicebutton">
-                                Click here to roll the dice!
-                            </button>
-                        </div>
+                            <div>
+                                <button id="rolldicebutton">
+                                    Click here to roll the dice!
+                                </button>
+                            </div>
                         </p>
                         <p>
-                        <div id="rollnumber" style="display: none">
-                            You rolled a
-                        </div>
+                            <div id="rollnumber" style="display: none">
+                                You rolled a
+                            </div>
                         </p>
                         <p>
-                        <div id="rolldoubles" style="display: none">
-                            You rolled doubles! Take another turn!
-                        </div>
+                            <div id="rolldoubles" style="display: none">
+                                You rolled doubles! Take another turn!
+                            </div>
                         </p>
                     </div>
                     <div id="buysomething" style="display: none">
@@ -216,10 +212,8 @@
                                     Market</button>
                             </p>
                         </div>
-                        <div>
-                            <font size="6">
+                        <div style="font-size: 30px">
                                 OR
-                            </font>
                         </div>
                         <div>
                             <u>
@@ -227,12 +221,11 @@
                             </u>
                         </div>
                         <div class="shop">
-                            <p>
-                                <button id="buytrainstationbutton" class="shop">Train Station</button>
-                                <button id="buyshoppingmallbutton" class="shop">Shopping Mall</button>
-                                <button id="buyamusementparkbutton" class="shop">Amusement Park</button>
-                                <button id="buyradiotowerbutton" class="shop">Radio Tower</button>
-                            </p>
+                            <br> 
+                            <button id="buytrainstationbutton" class="shop">Train Station</button>
+                            <button id="buyshoppingmallbutton" class="shop">Shopping Mall</button>
+                            <button id="buyamusementparkbutton" class="shop">Amusement Park</button>
+                            <button id="buyradiotowerbutton" class="shop">Radio Tower</button>
                         </div>
                     </div>
                     <div>
@@ -268,7 +261,6 @@
                                 </p>
                             </div>
                         </div>
-
                         <div id="giveindex" style="display: none">
                             <div>
                                 <p>
@@ -303,15 +295,13 @@
                     </div>
                 </div>
                 <div style="border: thin solid black; padding: 25px">
-                    <div id="player2text">
+                    <div id="player2text" style="font-size: 30px">
                         <u>
-                            <font size="6"> Player 2 </font>
+                            Player 2
                         </u>
                     </div>
-                    <div id="balance2">
-                        <font size="5">
+                    <div id="balance2" style="font-size: 25px">
                             Balance: 3
-                        </font>
                     </div>
                     <div id="wheatfield2">
                         Wheat Field: 1
@@ -375,15 +365,13 @@
             </div>
             <div style="justify-content: space-between; display: none; margin: 20px 150px" id="player34inventory">
                 <div id="player3inventory" style="visibility: hidden; border: thin solid black; padding: 25px">
-                    <div id="player3text">
+                    <div id="player3text" style="font-size: 30px">
                         <u>
-                            <font size="6"> Player 3 </font>
+                            Player 3
                         </u>
                     </div>
-                    <div id="balance3">
-                        <font size="5">
+                    <div id="balance3" style="font-size: 25px">
                             Balance: 3
-                        </font>
                     </div>
                     <div id="wheatfield3">
                         Wheat Field: 1
@@ -445,6 +433,7 @@
                     </div>
                 </div>
                 <div>
+                    <div id="hovertip" style="display: none">Tip: Hover over an establishment/landmark to view the card!</div>
                     <div id="imgWrap">
                         <ul id="cardexplanation" style="padding-right: 10px; display: none">
                             <li id="dicerollexplanation">Dice roll to activate effect &rarr;</li>
@@ -486,7 +475,8 @@
                             <li>&larr; Effect</li>
                         </ul>
                     </div>
-                        <div id="incomesummary" style="display: none">
+                    <br>
+                    <div id="incomesummary" style="display: none">
                         <u>
                             Income Summary
                         </u>
@@ -505,7 +495,7 @@
                             You lost x coins.
                         </div>
                     </div>
-                    <br id="stadiumbreak">
+                    <br id="stadiumbreak" style="display: none">
                     <div id="tvplayertextbuttons" style="display: none">
                         <div id="tvplayertext">
                             <u>
@@ -561,17 +551,17 @@
                     <br id="greenblueincomebreak" style="display: none">
                     <div>
                         <button id="endturnbutton" disabled style="display: none">
-                            <font size="6">
+                            <div style="font-size: 35px">
                                 End Turn
-                            </font>
+                            </div>
                         </button>
                     </div>
                     <br>
                     <div>
                         <button id="savegamebutton" disabled style="display: none">
-                            <font size="4">
+                            <div style="font-size: 20px">
                                 Save Game
-                            </font>
+                            </div>
                         </button>
                     </div>
                     <div id="savegametext" style="display: none">
@@ -585,15 +575,13 @@
                     </div>
                 </div>
                 <div id="player4inventory" style="visibility: hidden; border: thin solid black; padding: 25px">
-                    <div id="player4text">
+                    <div id="player4text" style="font-size: 30px">
                         <u>
-                            <font size="6"> Player 4 </font>
+                            Player 4
                         </u>
                     </div>
-                    <div id="balance4">
-                        <font size="5">
+                    <div id="balance4" style="font-size: 25px">
                             Balance: 3
-                        </font>
                     </div>
                     <div id="wheatfield4">
                         Wheat Field: 1

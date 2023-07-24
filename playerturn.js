@@ -3,8 +3,9 @@ import { income } from './income.js';
 import { enableShop } from './shop.js'
 
 export function playerTurn(game, flag) { // flag true means regular turn, not reroll   
+    document.getElementById('rolldicebutton').style.display = "none";
+
     document.getElementById('savegametext').style.display = "none";
-    document.getElementById('rolldicebutton').disabled = true; // disable the roll dice button
     document.getElementById('savegamebutton').disabled = true; // disable the save game button 
     
     // rolling stuff

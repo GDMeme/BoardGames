@@ -1,41 +1,67 @@
 import { start } from './start.js';
 
-document.getElementById('numberofplayersselect').onchange = function() {
-    document.getElementById('submitplayersbutton').disabled = false;
+start(4, ['a', 'b', 'c', 'd']);
+
+document.getElementById('testbutton').onclick = function() {
+    document.querySelector('#chathistory').innerHTML += '\nsecond message'
 }
+
+document.getElementById('openchatbutton').onclick = function() {
+    document.getElementById('chat').style.display = "block";
+}
+
+document.getElementById('closemessagebutton').onclick = function() {
+    document.getElementById('chat').style.display = "none";
+}
+
+// document.getElementById('numberofplayersselect').onchange = function() {
+//     document.getElementById('submitplayersbutton').disabled = false;
+// }
 
 let numberOfPlayers;
 let playerNames = Array(numberOfPlayers);
 
 // this is the whole game
-document.getElementById('submitplayersbutton').onclick = function() {
-    numberOfPlayers = parseInt(document.getElementById('numberofplayersselect').value);
-    document.getElementById(`tvplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
-    document.getElementById(`tvplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
+// TODO: what is going on here probably just rewrite the whole thing
+document.getElementById('submitplayernamebutton').onclick = function() {
+    // numberOfPlayers = parseInt(document.getElementById('numberofplayersselect').value);
+    // document.getElementById(`tvplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
+    // document.getElementById(`tvplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
 
-    document.getElementById(`businessplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
-    document.getElementById(`businessplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
+    // document.getElementById(`businessplayer3button`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
+    // document.getElementById(`businessplayer4button`).style.display = numberOfPlayers === 4 ? "inline" : "none";
     
     // getting player names
     document.getElementById('beforegametext').style.display = "none";
     document.getElementById('playernametext').style.display = "inline";
     
-    document.getElementById(`player3name`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
-    document.getElementById(`player4name`).style.display = numberOfPlayers === 4 ? "inline" : "none";
+    // document.getElementById(`player3name`).style.display = numberOfPlayers >= 3 ? "inline" : "none";
+    // document.getElementById(`player4name`).style.display = numberOfPlayers === 4 ? "inline" : "none";
 
-    document.getElementById('submitplayernamesbutton').style.display = "inline";
+    document.getElementById('submitplayernamebutton').style.display = "inline";
 }
 
-for (let i = 0; i < 3; i++) {
-    document.getElementById(`player${i + 2}nameinput`).addEventListener("keypress", function(event) {
-        if (event.key === "Enter" && i + 2 === numberOfPlayers) {
-            event.preventDefault();
-            document.getElementById('submitplayernamesbutton').click();
+document.getElementById('sendmessage').addEventListener("keypress", function(event) {
+    // need to nest because "Enter" causes page refresh
+    if (event.key === "Enter") {
+        event.preventDefault();
+        if (document.getElementById('sendmessage').value) {
+            console.log('hi')
         }
-    })
-}
+    }
+});
 
-document.getElementById('submitplayernamesbutton').onclick = function() {
+// You can press "enter" instead of the submit button when submitting your name
+// for (let i = 0; i < 3; i++) {
+//     document.getElementById(`player${i + 2}nameinput`).addEventListener("keypress", function(event) {
+//         if (event.key === "Enter" && i + 2 === numberOfPlayers) {
+//             event.preventDefault();
+//             document.getElementById('submitplayernamebutton').click();
+//         }
+//     })
+// }
+
+document.getElementById('submitplayernamebutton').onclick = function() {
     // processing player names
     for (let i = 0; i < numberOfPlayers; i++) {
         playerNames[i] = document.getElementById(`player${i + 1}nameinput`).value || `Player ${i + 1}`;

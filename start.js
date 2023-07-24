@@ -11,6 +11,9 @@ import { endTurn } from './endturn.js';
 import * as C from './constants.js'
 
 export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
+    document.getElementById('openchatbutton').style.display = "inline";
+    document.getElementById('hovertip').style.display = "inline";
+
     document.getElementById('startgametext').style.display = "inline";
     document.querySelector('#titletext').innerHTML = "<u>Machi Koro</u>";
     document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
@@ -59,12 +62,14 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
                 document.getElementById('dicerollexplanation').style.display = "none";
             }
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseover = function () {
+                document.getElementById('hovertip').style.display = "none";
+
                 document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "inline";
                 document.getElementById('cardexplanation').style.display = "flex";
                 document.getElementById('cardexplanation2').style.display = "flex";
                 document.getElementById('dicerollexplanation').style.display = j > 14 ? "none" : "flex";
                 document.getElementById('extraindent').style.display = j > 14 ? "flex" : "none";
-                document.getElementById('imgWrap').style.margin = '0px ' + (document.getElementById('incomesummary').style.display === "inline" ? (j < 15 ? '-90px' : '-40') : (j < 15 ? '-200px' : '-150px')) + ' auto';
+                document.getElementById('imgWrap').style.margin = '0px ' + (document.getElementById('incomesummary').style.display === "inline" ? (j < 15 ? '-92px' : '-38px') : (j < 15 ? '-193px' : '-139px')) + ' auto';
             }
         }
     }
