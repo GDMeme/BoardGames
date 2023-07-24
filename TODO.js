@@ -17,3 +17,5 @@
 // TODO: "experienced player" button? (hovertip)
 
 // TODO: \n is newline character for chat
+
+// TODO: players can re-enable buttons that are disabled, remember to validate on server
