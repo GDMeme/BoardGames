@@ -22,6 +22,10 @@ h1 {
     margin: 0px 0px 0.67em 0px;
 }
 
+body {
+    font-family: "Nunito",sans-serif;
+}
+
 button {
     color: #000;
     font-weight: bold;
@@ -47,6 +51,11 @@ button:hover {
     cursor: pointer;
     transform: scale(1.03);
     transition: .2s all
+}
+
+button:hover:disabled {
+    cursor: pointer;
+    transform: scale(1);
 }
 
 * {box-sizing: border-box;}
