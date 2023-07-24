@@ -43,6 +43,12 @@ button:disabled {
     color: #666666;
 }
 
+button:hover {
+    cursor: pointer;
+    transform: scale(1.03);
+    transition: .2s all
+}
+
 * {box-sizing: border-box;}
 
 /* Button used to open the chat form - fixed at the bottom of the page */
