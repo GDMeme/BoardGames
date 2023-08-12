@@ -1,14 +1,11 @@
-let playerName;
-let roomsToDelete = [];
-let joined = false;
 let currentRoomID = -1;
 let playerList = [];
 
-// TODO: Can't send own websocket over unless JSON.stringify but I don't think I need to send the websocket
-
 // TODO: Show the user's name somewhere in the top left maybe
 
-// TODO: When going back, some stuff remains
+// TODO: Join room with no available rooms has extra space
+
+// TODO: Text for host has been transferred
 
 export function queue(playerName) {   
     connect().then(function(ws) {
@@ -19,17 +16,9 @@ export function queue(playerName) {
 
         document.getElementById('createroombutton').onclick = function() {
             document.getElementById('roombuttons').style.display = "none";
+            document.getElementById('goback').style.display = "inline";
 
             document.getElementById('roomname').style.display = "inline";
-            document.getElementById('submitroomnamebutton').onclick = function() { // TODO: Should be able to press enter as well instead of having to click button
-                    document.getElementById('openchatbutton').style.display = "inline";
-                    document.getElementById('openchatbutton').click();
-                    document.getElementById('roomname').style.display = "none";
-                    document.getElementById('waiting').style.display = "inline";
-                    document.getElementById('playerlist').style.display = "inline";
-                    addNewPlayer(playerName);
-                    ws.send(JSON.stringify({type: 'createRoom', roomName: document.getElementById('roomnameinput').value || `${playerName}'s Room`}));
-            }
 
             document.getElementById('roomnameinput').addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
@@ -39,29 +28,49 @@ export function queue(playerName) {
             });
         }
 
+        document.getElementById('submitroomnamebutton').onclick = function() {
+            document.getElementById('openchatbutton').style.display = "inline";
+            document.getElementById('openchatbutton').click();
+            document.getElementById('roomname').style.display = "none";
+            document.getElementById('waiting').style.display = "inline";
+            document.getElementById('playerlist').style.display = "inline";
+            addNewPlayer(playerName, true);
+
+            document.getElementById('startgame').style.display = "inline";
+            ws.send(JSON.stringify({type: 'createRoom', roomName: document.getElementById('roomnameinput').value || `${playerName}'s Room`}));
+        }
+
         document.getElementById('joinroombutton').onclick = function() {
             document.getElementById('roombuttons').style.display = "none";
             document.getElementById('goback').style.display = "inline";
             document.getElementById('loader').style.display = "inline";
             document.body.style.backgroundColor = '#645a5a';
             ws.send(JSON.stringify({type: 'requestRooms'})); // displays all available rooms to join
+        }
 
+        document.getElementById('refreshroomsbutton').onclick = function() {
+            for (const child of document.getElementById('availablerooms').children) {
+                child.remove();
+            }
+            ws.send(JSON.stringify({type: 'requestRooms'}));
         }
 
         document.getElementById('goback').onclick = function() {
             document.getElementById('goback').style.display = "none";
             document.getElementById('roombuttons').style.display = "inline";
             document.getElementById('playerlist').style.display = "none";
-            for (const element of playerList) {
-                element.remove();
+            document.getElementById('waiting').style.display = "none";
+            document.getElementById('availableroomstext').style.display = "none";
+            document.getElementById('roomname').style.display = "none";
+            document.getElementById('startgame').style.display = "none";
+            while (document.getElementById('playerlist').children.length > 1) {
+                document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].remove();
             }
-            for (const element of roomsToDelete) {
-                element.remove();
+            for (const child of document.getElementById('availablerooms').children) {
+                child.remove();
             }
-            roomsToDelete = [];
             document.getElementById('openchatbutton').style.display = "none";
-            joined = false;
-            ws.send(JSON.stringify({type: 'removePlayer', roomID: currentRoomID})); // removes player from the room (if they are in one)
+            ws.send(JSON.stringify({type: 'removePlayer', roomID: currentRoomID, name: playerName})); // removes player from the room (if they are in one)
             currentRoomID = -1;
         }
         
@@ -77,7 +86,7 @@ export function queue(playerName) {
         // Listen for messages
         ws.addEventListener("message", (message) => {
             message = JSON.parse(message.data); // don't need try/catch because server is sending the message (guaranteed to be valid)
-            if (message.type === 'niceTry') {
+            if (message.type === 'niceTry') { // easter egg
                 document.getElementById('nicetry').style.display = "inline";
                 document.getElementById('entiregame').style.display = "none";
                 setTimeout(() => {
@@ -87,47 +96,57 @@ export function queue(playerName) {
             } else if (message.type === "playerJoined") {
                 document.getElementById('waiting').style.display = "none";
                 document.getElementById('playerlist').style.display = "inline";
-                addNewPlayer(message.newName);
-                document.querySelector('#chathistory').innerHTML += `${message.newName} joined your room!\n`; // TODO: If textarea is empty, don't put the newline
-                // TODO: have a player list displayed somewhere on the screen
+                addNewPlayer(message.newName, false);
+                document.getElementById('startgamebutton').disabled = false;
+                document.querySelector('#chathistory').innerHTML += `${message.newName} joined your room!\n`;
             } else if (message.type === "message") {
                 document.querySelector('#chathistory').innerHTML += `${message.name}: ${message.message}\n`;
             } else if (message.type === 'sendRooms') {
                 document.getElementById('loader').style.display = "none";
                 document.body.style.backgroundColor = '#CCCCCC';
-                if (!joined) {
-                    document.getElementById('availableroomstext').style.display = "inline";
-                    for (const room of message.rooms) {
-                        let roomButton = document.createElement("BUTTON");
-                        // TODO: On button hover, show who is in that room
-                        roomButton.innerHTML = room[1];
-                        document.getElementById('availablerooms').appendChild(roomButton);
-                        roomButton.onclick = function() {
-                            currentRoomID = room[0];
-                            ws.send(JSON.stringify({type: 'joinedRoom', roomID: currentRoomID, name: playerName})); // notify other people that you joined
-                            for (const element of roomsToDelete) {
-                                element.remove();
-                            }
-                            document.getElementById('openchatbutton').style.display = "inline";
-                            document.getElementById('openchatbutton').click();
-                            document.getElementById('availableroomstext').style.display = "none";
-                            document.getElementById('playerlist').style.display = "inline";
-                            joined = true; // TODO: When leaving a room, turn "joined" to false
+                document.getElementById('availableroomstext').style.display = "inline";
+                for (const room of message.rooms) {
+                    let roomButton = document.createElement('button');
+                    // TODO: On button hover, show who is in that room
+                    roomButton.innerHTML = room[1];
+                    document.getElementById('availablerooms').appendChild(roomButton);
+                    roomButton.onclick = function() {
+                        currentRoomID = room[0];
+                        ws.send(JSON.stringify({type: 'joinedRoom', roomID: currentRoomID, name: playerName})); // notify other people that you joined
+                        for (const child of document.getElementById('availablerooms').children) {
+                            child.remove();
                         }
-                        roomsToDelete.push(roomButton);
+                        document.getElementById('openchatbutton').style.display = "inline";
+                        document.getElementById('openchatbutton').click();
+                        document.getElementById('availableroomstext').style.display = "none";
+                        document.getElementById('playerlist').style.display = "inline";
                     }
-                    setTimeout(() => {
-                        for (const element of roomsToDelete) {
-                            element.remove();
-                        }
-                        roomsToDelete = [];
-                        ws.send(JSON.stringify({type: 'requestRooms'}));
-                    }, 5000);
                 }
             } else if (message.type === 'ID') {
                 currentRoomID = message.ID;
             } else if (message.type === 'addPlayer') {
-                addNewPlayer(message.name);
+                addNewPlayer(message.name, false);
+            } else if (message.type === 'addYourself') {
+                addNewPlayer(message.name, true);
+            } else if (message.type === 'removePlayer') {
+                if (message.newHost) {
+                    document.getElementById('playerlist').children[2].innerHTML += ' (Host)';
+                    document.getElementById('playerlist').children[1].remove();
+                } else {
+                    for (let i = 1; i < document.getElementById('playerlist').children.length; i++) { // 1 because the first child is the underlined label
+
+                        if (document.getElementById('playerlist').children[i].innerHTML === message.name) {
+                            // TODO: ^^^ Fix this (make server give an index) (Case: host and someone else have same name, order and bold will be wrong)
+                            console.log('i got here')
+                            document.getElementById('playerlist').children[1].innerHTML += ' (Host)'; // TODO: How do I know whose client this is???
+                            // TODO: transfer host to the next person (give them the start button, etc.)
+                            document.getElementById('playerlist').children[i].remove();
+                            break;
+                        }
+                    }
+                }
+                document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
+                document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
             }
         });
 
@@ -136,9 +155,10 @@ export function queue(playerName) {
     });
 };
 
-function addNewPlayer(name) {
+function addNewPlayer(name, bold) {
     let newPlayer = document.createElement('li');
-    newPlayer.innerHTML = name;
+    newPlayer.innerHTML = name + (document.getElementById('playerlist').children.length === 1 ? ' (Host)' : '');
+    newPlayer.style.fontWeight = bold ? 'bold' : 'normal';
     playerList.push(newPlayer);
     document.getElementById('playerlist').appendChild(newPlayer);
 }

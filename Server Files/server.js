@@ -57,12 +57,22 @@ wss.on('connection', function (ws) {
                 ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i])}));
             }
             rooms[roomIndex].push(ws);
-            ws.send(JSON.stringify({type: 'addPlayer', name: message.name}));
+            ws.send(JSON.stringify({type: 'addYourself', name: message.name}));
         } else if (message.type === "removePlayer") {
             if (message.roomID !== -1) {
                 let roomIndex = findRoomIndex(message.roomID);
                 WStoRoomID.delete(ws);
-                rooms[roomIndex].splice(rooms[roomIndex].findIndex(elem => elem === ws), 1)
+                let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
+                console.log('player index: ', playerIndex);
+                rooms[roomIndex].splice(playerIndex, 1);
+
+                // TODO: update playerlist for each player
+                for (let i = 2; i < rooms[roomIndex].length; i++) {
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: message.name, newHost: playerIndex === 2}))
+                }
+                if (rooms[roomIndex].length === 2) { // They were the last one to leave
+                    rooms.splice(roomIndex, 1); // remove the room
+                }
             }
         } else if (message.type === "createRoom") {
             rooms.push([roomIDCounter, message.roomName, ws]);
@@ -73,6 +83,8 @@ wss.on('connection', function (ws) {
     });
 
     ws.on('close', function () {
+        // TODO: Send a message in chat saying that they left
+        // TODO: Update playerlist
         let roomID = WStoRoomID.get(ws);
         if (roomID !== undefined) {
             let roomIndex = findRoomIndex(roomID);

@@ -30,7 +30,9 @@
         <div id="nicetry" style="font-size: 50px; display: none">NICE TRY</div>
         <div class="loader" id="loader" style="display: none"></div>
         <div id="availableroomstext" style="display: none">
-            Click a button to join a room!
+            <button id="refreshroomsbutton">Refresh</button>
+            <p></p>
+            <p>Click a button to join a room!</p>
         </div>
         <div id="availablerooms"></div>
         <div id="roomname" style="display: none">
@@ -48,14 +50,15 @@
                 <p>
                     <input type="text" id="playernameinput" size="15">
                 </p>
-                <p>
-                    <button id="submitplayernamebutton">Submit</button>
-                </p>
+                <button id="submitplayernamebutton">Submit</button>
             </div>
             <div id="goback" style="display: none">
+                <br>
                 <button id="gobackbutton">
                     Go Back
                 </button>
+                <br>
+                <br>
             </div>
             <div id="roombuttons" style="display: none">
                 <button id="createroombutton">
@@ -65,7 +68,7 @@
                     Join Room!
                 </button>
             </div>
-            <div id="waiting" style="display: none">
+            <div id="waiting" style="display: none; font-size: large;">
                 <p>
                     Waiting for other players...
                 </p>
@@ -73,16 +76,20 @@
             <div id="playerlist" style="display: none">
                 <u>Players</u>
             </div>
-            <button id="testbutton">
+            <button id="testbutton" style="position: absolute; bottom: 5px">
                 click me
             </button>
             <div id="availableroomstext" style="display: none">
                 Click a button to join a room!
             </div>
             <div id="startgame" style="display: none">
-                <button id="startgamebutton">
+                <br>
+                <br>
+                <br>
+                <button id="startgamebutton" disabled>
                     Start Game!
                 </button>
+                <p></p>
                 <div>
                     <input type="file" id="existinggamefile" onclick="this.value=null;" style="text-align-last: center">
                 </div>
