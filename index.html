@@ -14,32 +14,48 @@
         </u>
     </h1>
     <body style="background-color: #CCCCCC">
-        <button class="openchat" id="openchatbutton" style="display: none">Chat</button>
+        <button class="openchat" id="openchatbutton">Chat</button>
         <div class="chatpopup" id="chat" style="text-align: left;">
-            <form class="form-container">
+            <div class="form-container">
                 <h1>Chat</h1>
 
                 <label for="sendmessage"><u>Chat History</u></label>
                 <textarea id="chathistory" disabled></textarea>
-                <input type="text" id="sendmessage" style="position: absolute; bottom: 90px; right: 10px; width: 280px" placeholder="Send a message...">
+                <input type="text" id="sendmessage" style="position: absolute; bottom: 90px; right: 10px; width: 280px" placeholder='Press "Enter" to send a message...'>
                 <br> 
                 <br> 
                 <button type="button" class="btn cancel" id="closemessagebutton">Close</button>
-            </form>
+            </div>
+        </div>
+        <div id="nicetry" style="font-size: 50px; display: none">NICE TRY</div>
+        <div class="loader" id="loader" style="display: none"></div>
+        <div id="availableroomstext" style="display: none">
+            Click a button to join a room!
+        </div>
+        <div id="availablerooms"></div>
+        <div id="roomname" style="display: none">
+            <p> Enter the name of your room! </p>
+            <p><input type="text" id="roomnameinput"></p>
+            <button id="submitroomnamebutton">Submit</button>
         </div>
         <div id="entiregame">
-            <div id="playernametext" style="display: none">
+            <div id="playernametext">
                 <p>
                     <u>
                         Enter your name!
                     </u>
                 </p>
                 <p>
-                    <input type="text" id="player1nameinput" size="15">
+                    <input type="text" id="playernameinput" size="15">
                 </p>
                 <p>
-                    <button id="submitplayernamebutton" style="display: none">Submit</button>
+                    <button id="submitplayernamebutton">Submit</button>
                 </p>
+            </div>
+            <div id="goback" style="display: none">
+                <button id="gobackbutton">
+                    Go Back
+                </button>
             </div>
             <div id="roombuttons" style="display: none">
                 <button id="createroombutton">
@@ -51,8 +67,11 @@
             </div>
             <div id="waiting" style="display: none">
                 <p>
-                    Waiting for other people...
+                    Waiting for other players...
                 </p>
+            </div>
+            <div id="playerlist" style="display: none">
+                <u>Players</u>
             </div>
             <button id="testbutton">
                 click me
