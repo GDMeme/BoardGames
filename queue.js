@@ -1,5 +1,6 @@
 let currentRoomID = -1;
 let playerList = [];
+let host = false;
 
 // TODO: Show the user's name somewhere in the top left maybe
 
@@ -37,6 +38,7 @@ export function queue(playerName) {
             addNewPlayer(playerName, true);
 
             document.getElementById('startgame').style.display = "inline";
+            host = true;
             ws.send(JSON.stringify({type: 'createRoom', roomName: document.getElementById('roomnameinput').value || `${playerName}'s Room`}));
         }
 
@@ -72,6 +74,7 @@ export function queue(playerName) {
             document.getElementById('openchatbutton').style.display = "none";
             ws.send(JSON.stringify({type: 'removePlayer', roomID: currentRoomID, name: playerName})); // removes player from the room (if they are in one)
             currentRoomID = -1;
+            host = false;
         }
         
         document.getElementById('sendmessage').addEventListener("keypress", function(event) {
@@ -138,8 +141,7 @@ export function queue(playerName) {
                         if (document.getElementById('playerlist').children[i].innerHTML === message.name) {
                             // TODO: ^^^ Fix this (make server give an index) (Case: host and someone else have same name, order and bold will be wrong)
                             console.log('i got here')
-                            document.getElementById('playerlist').children[1].innerHTML += ' (Host)'; // TODO: How do I know whose client this is???
-                            // TODO: transfer host to the next person (give them the start button, etc.)
+                            document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
                             document.getElementById('playerlist').children[i].remove();
                             break;
                         }
@@ -147,6 +149,10 @@ export function queue(playerName) {
                 }
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
                 document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
+            } else if (message.type === 'newHost') {
+                host = true;
+                document.getElementById('startgame').style.display = "inline";
+                document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             }
         });
 

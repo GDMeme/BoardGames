@@ -63,12 +63,15 @@ wss.on('connection', function (ws) {
                 let roomIndex = findRoomIndex(message.roomID);
                 WStoRoomID.delete(ws);
                 let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
-                console.log('player index: ', playerIndex);
+                // console.log('player index: ', playerIndex);
                 rooms[roomIndex].splice(playerIndex, 1);
 
                 // TODO: update playerlist for each player
                 for (let i = 2; i < rooms[roomIndex].length; i++) {
                     rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: message.name, newHost: playerIndex === 2}))
+                }
+                if (playerIndex === 2) {
+                    rooms[roomIndex][2].send(JSON.stringify({type: 'newHost'})); // tell the new host
                 }
                 if (rooms[roomIndex].length === 2) { // They were the last one to leave
                     rooms.splice(roomIndex, 1); // remove the room
