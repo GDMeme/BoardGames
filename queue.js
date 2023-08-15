@@ -1,3 +1,5 @@
+import { start } from './start.js';
+
 let currentRoomID = -1;
 let playerList = [];
 let host = false;
@@ -86,6 +88,10 @@ export function queue(playerName) {
             }
         });
 
+        document.getElementById('startgamebutton').onclick = function() {
+            ws.send(JSON.stringify({type: 'startGame', roomID: currentRoomID}));
+        }
+
         // Listen for messages
         ws.addEventListener("message", (message) => {
             message = JSON.parse(message.data); // don't need try/catch because server is sending the message (guaranteed to be valid)
@@ -111,10 +117,10 @@ export function queue(playerName) {
                 for (const room of message.rooms) {
                     let roomButton = document.createElement('button');
                     // TODO: On button hover, show who is in that room
-                    roomButton.innerHTML = room[1];
+                    roomButton.innerHTML = room[0].name;
                     document.getElementById('availablerooms').appendChild(roomButton);
                     roomButton.onclick = function() {
-                        currentRoomID = room[0];
+                        currentRoomID = room[0].ID;
                         ws.send(JSON.stringify({type: 'joinedRoom', roomID: currentRoomID, name: playerName})); // notify other people that you joined
                         for (const child of document.getElementById('availablerooms').children) {
                             child.remove();
@@ -136,16 +142,8 @@ export function queue(playerName) {
                     document.getElementById('playerlist').children[2].innerHTML += ' (Host)';
                     document.getElementById('playerlist').children[1].remove();
                 } else {
-                    for (let i = 1; i < document.getElementById('playerlist').children.length; i++) { // 1 because the first child is the underlined label
-
-                        if (document.getElementById('playerlist').children[i].innerHTML === message.name) {
-                            // TODO: ^^^ Fix this (make server give an index) (Case: host and someone else have same name, order and bold will be wrong)
-                            console.log('i got here')
-                            document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
-                            document.getElementById('playerlist').children[i].remove();
-                            break;
-                        }
-                    }
+                    document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
+                    document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 }
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
                 document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
@@ -153,6 +151,8 @@ export function queue(playerName) {
                 host = true;
                 document.getElementById('startgame').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
+            } else if (message.type === 'startGame') {
+                start();
             }
         });
 
@@ -171,9 +171,8 @@ function addNewPlayer(name, bold) {
 
 function connect() {
     return new Promise(function(resolve, reject) {
-        var ws = new WebSocket('wss://localhost:8080'); // TODO: change back to wss later
+        var ws = new WebSocket('wss://localhost:8080');
         ws.onopen = function() {
-            // console.log("Established websocket connection!")
             document.getElementById('loader').style.display = "inline";
             document.body.style.backgroundColor = "#645a5a";
             resolve(ws);

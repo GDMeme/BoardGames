@@ -1,5 +1,6 @@
 export class Player {
-    constructor() {
+    constructor(name) {
+        this.name = name;
         this.balance = 3;
         this.establishments = Array(15).fill(0);
         this.landmarks = Array(4).fill(false);

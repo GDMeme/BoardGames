@@ -2,6 +2,9 @@ import { WebSocketServer } from 'ws';
 import { readFileSync } from 'fs';
 import { createServer } from 'https';
 
+import { Game } from './game.js';
+import { Player } from './player.js';
+
 const server = createServer({
     cert: readFileSync('cert.pem'),
     key: readFileSync('key.pem'),
@@ -12,8 +15,7 @@ server.listen(8080);
 
 const wss = new WebSocketServer({ server });
 
-// TODO: NEEDS ID AND ROOMNAME
-let rooms = []; // * * array of array of objects in here (all websockets + 0th index: ID of room + 1st index: name of room) ID of room is a number
+let rooms = []; // * * array of array of objects in here (all websockets + 0th index: game object: ID, name of room, playerCounter) ID of room is a number
 
 // * * Don't need to JSON.stringify all objects in the map (idk why but it works)
 // * * Actually do I even need this??? YES because when they disconnect, can't send a message right before they disconnect
@@ -24,9 +26,25 @@ let roomIDCounter = 0;
 
 function findRoomIndex(ID) {
     for (let i = 0; i < rooms.length; i++) {
-        if (rooms[i][0] === ID) {
+        if (rooms[i][0].ID === ID) {
             return i;
         }
+    }
+}
+
+function removePlayer(ws, roomID, playerName) {
+    let roomIndex = findRoomIndex(roomID);
+    WStoRoomID.delete(ws);
+    let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
+    rooms[roomIndex].splice(playerIndex, 1);
+    for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
+        rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: playerName, indexToRemove: playerIndex - 1, newHost: playerIndex === 1})); // 1 because ignore the first element
+    }
+    if (playerIndex === 1) { // 1 because ignore the first element
+        rooms[roomIndex][1].send(JSON.stringify({type: 'newHost'})); // 1 because ignore the first element; tell the new host
+    }
+    if (rooms[roomIndex].length === 1) { // 1 because ignore the first element; they were the last one to leave
+        rooms.splice(roomIndex, 1); // remove the room
     }
 }
 
@@ -43,7 +61,7 @@ wss.on('connection', function (ws) {
         if (message.type === 'first') {
             WStoPlayerName.set(ws, message.name);
         } else if (message.type === 'message') {
-            for (let i = 2; i < rooms[findRoomIndex(message.roomID)].length; i++) { // 2 because ignore the first two elements (ID and name)
+            for (let i = 1; i < rooms[findRoomIndex(message.roomID)].length; i++) { // 1 because ignore the first element
                 rooms[findRoomIndex(message.roomID)][i].send(JSON.stringify({type: 'message', message: message.message, name: message.name}));
             }
         } else if (message.type === 'requestRooms') {
@@ -51,7 +69,7 @@ wss.on('connection', function (ws) {
         } else if (message.type === 'joinedRoom') {
             let roomIndex = findRoomIndex(message.roomID);
             WStoRoomID.set(ws, message.roomID);
-            for (let i = 2; i < rooms[roomIndex].length; i++) { // 2 because ignore the first two elements
+            for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
                 // send message to original person as well
                 rooms[roomIndex][i].send(JSON.stringify({type: 'playerJoined', newName: message.name}));
                 ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i])}));
@@ -60,29 +78,31 @@ wss.on('connection', function (ws) {
             ws.send(JSON.stringify({type: 'addYourself', name: message.name}));
         } else if (message.type === "removePlayer") {
             if (message.roomID !== -1) {
-                let roomIndex = findRoomIndex(message.roomID);
-                WStoRoomID.delete(ws);
-                let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
-                // console.log('player index: ', playerIndex);
-                rooms[roomIndex].splice(playerIndex, 1);
-
-                // TODO: update playerlist for each player
-                for (let i = 2; i < rooms[roomIndex].length; i++) {
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: message.name, newHost: playerIndex === 2}))
-                }
-                if (playerIndex === 2) {
-                    rooms[roomIndex][2].send(JSON.stringify({type: 'newHost'})); // tell the new host
-                }
-                if (rooms[roomIndex].length === 2) { // They were the last one to leave
-                    rooms.splice(roomIndex, 1); // remove the room
-                }
+                removePlayer(ws, message.roomID, message.name);
             }
         } else if (message.type === "createRoom") {
-            rooms.push([roomIDCounter, message.roomName, ws]);
+            rooms.push([new Game(), ws]);
+            rooms[rooms.length - 1][0].ID = roomIDCounter;
+            rooms[rooms.length - 1][0].name = message.roomName;
             ws.send(JSON.stringify({type: 'ID', ID: roomIDCounter}));
             WStoRoomID.set(ws, roomIDCounter);
             roomIDCounter++;
-        }
+        } else if (message.type === "startGame") {
+            let roomIndex = findRoomIndex(message.roomID);
+            if (rooms[roomIndex][1] === ws) { // 1 because ignore the first element
+                let numberOfPlayers = rooms[roomIndex].length - 1; // 1 because ignore the first element
+                rooms[roomIndex][0].numberOfPlayers = numberOfPlayers; // * * Do I need this value? Maybe just for convenience
+                rooms[roomIndex][0].players = Array(numberOfPlayers);
+                for (let i = 0; i < numberOfPlayers; i++) {
+                    rooms[roomIndex][0].players[i] = new Player(WStoPlayerName.get(rooms[roomIndex][i + 1]));
+                }
+                for (let i = 1; i < rooms[roomIndex]; i++) { // 1 because ignore the first element
+                    ws.send(JSON.stringify({type: 'startGame', startingPlayer: i === 1}));
+                }
+            } else {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            }
+        } // TODO: playerCounter has to be server-side, tells the client whose turn it is
     });
 
     ws.on('close', function () {
@@ -90,12 +110,8 @@ wss.on('connection', function (ws) {
         // TODO: Update playerlist
         let roomID = WStoRoomID.get(ws);
         if (roomID !== undefined) {
-            let roomIndex = findRoomIndex(roomID);
-            rooms[roomIndex].splice(rooms[roomIndex].findIndex(elem => elem === ws), 1); // TODO: test this
-            if (rooms[roomIndex].length === 2) { // 2 because ignore the first two elements
-                rooms.splice(roomIndex, 1);
-            }
-            WStoRoomID.delete(ws);
+            removePlayer(ws, roomID, WStoPlayerName.get(ws));
         }
+        WStoPlayerName.delete(ws);
     });
 });
