@@ -3,6 +3,7 @@ import { start } from './start.js';
 let currentRoomID = -1;
 let playerList = [];
 let host = false;
+let playerName; // need this in case they have to reconnect
 
 // TODO: Show the user's name somewhere in the top left maybe
 
@@ -10,10 +11,10 @@ let host = false;
 
 // TODO: Text for host has been transferred
 
-export function queue(playerName) {   
+export function queue(name) {   
+    playerName = name;
     connect().then(function(ws) {
-        ws.send(JSON.stringify({type: 'first', ws: ws, name: playerName}));
-        document.getElementById('loader').style.display = "none";
+        ws.send(JSON.stringify({type: 'setPlayerName', ws: ws, name: playerName}));
         document.getElementById('roombuttons').style.display = "inline";
         document.body.style.backgroundColor = "#CCCCCC";
 
@@ -138,15 +139,16 @@ export function queue(playerName) {
             } else if (message.type === 'addYourself') {
                 addNewPlayer(message.name, true);
             } else if (message.type === 'removePlayer') {
+                document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
                 if (message.newHost) {
-                    document.getElementById('playerlist').children[2].innerHTML += ' (Host)';
+                    console.log('message.newHost: ', message.newHost);
                     document.getElementById('playerlist').children[1].remove();
-                } else {
                     document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
+                    document.querySelector('#chathistory').innerHTML += `Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!\n`;
+                } else {
                     document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 }
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
-                document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
             } else if (message.type === 'newHost') {
                 host = true;
                 document.getElementById('startgame').style.display = "inline";
@@ -172,15 +174,27 @@ function addNewPlayer(name, bold) {
 function connect() {
     return new Promise(function(resolve, reject) {
         var ws = new WebSocket('wss://localhost:8080');
+        document.getElementById('connectionfailed').style.display = "none";
+        document.getElementById('loader').style.display = "inline";
+        document.getElementById('waitingforserver').style.display = "inline";
+        document.body.style.backgroundColor = "#645a5a";
         ws.onopen = function() {
-            document.getElementById('loader').style.display = "inline";
-            document.body.style.backgroundColor = "#645a5a";
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('waitingforserver').style.display = "none";
             resolve(ws);
         };
         ws.onerror = function(err) {
+            document.body.style.backgroundColor = "#CCCCCC";
+            document.getElementById('loader').style.display = "none";
+            document.getElementById('waitingforserver').style.display = "none";
+            document.getElementById('connectionfailed').style.display = "inline";
             reject(err);
         };
     });
+}
+
+document.getElementById('tryconnectagain').onclick = function() {
+    queue(playerName);
 }
 
 // TODO: run start() once a "start game" button is pressed
