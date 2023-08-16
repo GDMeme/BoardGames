@@ -48,6 +48,8 @@ function removePlayer(ws, roomID, playerName) {
     }
 }
 
+// TODO: Can't join a full room (4 players)
+
 wss.on('connection', function (ws) {
 
     ws.on('error', console.error);

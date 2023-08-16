@@ -1,7 +1,6 @@
 import { start } from './start.js';
 
 let currentRoomID = -1;
-let playerList = [];
 let host = false;
 let playerName; // need this in case they have to reconnect
 
@@ -43,12 +42,12 @@ export function queue(name) {
             document.getElementById('roomname').style.display = "none";
             document.getElementById('waitingplayers').style.display = "inline";
             document.getElementById('playerlist').style.display = "inline";
-            addNewPlayer(playerName, true);
+            addNewPlayer(playerName, true, true);
 
             document.getElementById('startgame').style.display = "inline";
             host = true;
             let roomName = document.getElementById('roomnameinput').value || `${playerName}'s Room`;
-            document.querySelector('#roomnamelabel').innerHTML += roomName;
+            document.querySelector('#roomnamelabel').innerHTML = `Room Name: ${roomName}`;
             document.getElementById('roomnamelabel').style.display = "inline";
             ws.send(JSON.stringify({type: 'createRoom', roomName: roomName}));
         }
@@ -82,7 +81,9 @@ export function queue(name) {
             document.getElementById('startgame').style.display = "none";
             document.getElementById('noavailablerooms').style.display = "none";
             while (document.getElementById('playerlist').children.length > 1) {
+                document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].children[0]?.remove();
                 document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].remove();
+
             }
             for (const child of document.getElementById('availablerooms').children) {
                 child.remove();
@@ -162,17 +163,22 @@ export function queue(name) {
                 sendMessage(`You joined ${message.hostName}'s room!`)
             } else if (message.type === 'removePlayer') {
                 sendMessage(`${message.name} left your room!`);
+                document.getElementById('playerlist').children[message.indexToRemove + 1].children[0]?.remove();
+                document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 if (message.newHost) {
-                    document.getElementById('playerlist').children[1].remove();
                     document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
                     sendMessage(`Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!`);
-                } else {
-                    document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 }
                 document.getElementById('waitinghost').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             } else if (message.type === 'newHost') {
                 host = true;
+
+                // * * Adding kick buttons for each player
+                for (let i = 2; i < document.getElementById('playerlist').children.length; i++) { // can't kick yourself (the host)
+                    addKickButton(document.getElementById('playerlist').children[i]);
+                }
+
                 document.getElementById('waitinghost').style.display = "none";
                 document.getElementById('waitingplayers').style.display = document.getElementById('playerlist').children.length === 2 ? "inline" : "none";
 
@@ -188,12 +194,22 @@ export function queue(name) {
     });
 };
 
-function addNewPlayer(name, bold) {
+function addNewPlayer(name, bold, flag) { // flag true means don't add kick button
     let newPlayer = document.createElement('li');
     newPlayer.innerHTML = name + (document.getElementById('playerlist').children.length === 1 ? ' (Host)' : '');
     newPlayer.style.fontWeight = bold ? 'bold' : 'normal';
-    playerList.push(newPlayer);
+    newPlayer.style.marginBottom = '10px';
+    if (host && !flag) {
+        addKickButton(newPlayer);
+    }
     document.getElementById('playerlist').appendChild(newPlayer);
+}
+
+function addKickButton(parent) {
+    let kickButton = document.createElement('button');
+    kickButton.innerHTML = 'Kick Player';
+    kickButton.style.marginLeft = '5px';
+    parent.appendChild(kickButton);
 }
 
 function connect() {
