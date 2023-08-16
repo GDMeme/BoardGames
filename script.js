@@ -1,4 +1,3 @@
-import { start } from './start.js';
 import { queue } from './queue.js';
 import { loadGame } from './loadGame.js';
 
@@ -24,6 +23,7 @@ document.getElementById('submitplayernamebutton').onclick = function() {
     playerName = document.getElementById(`playernameinput`).value || `Anonymous`;
     document.getElementById('playernametext').style.display = "none";
 
+    document.querySelector('#playername').innerHTML = `Your name: ${playerName}`;
     queue(playerName);
 }
 
