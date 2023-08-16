@@ -40,7 +40,7 @@ function removePlayer(ws, roomID, playerName) {
     for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
         rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: playerName, indexToRemove: playerIndex - 1, newHost: playerIndex === 1})); // 1 because ignore the first element
     }
-    if (playerIndex === 1) { // 1 because ignore the first element
+    if (playerIndex === 1 && rooms[roomIndex].length > 1) { // 1 because ignore the first element
         rooms[roomIndex][1].send(JSON.stringify({type: 'newHost'})); // 1 because ignore the first element; tell the new host
     }
     if (rooms[roomIndex].length === 1) { // 1 because ignore the first element; they were the last one to leave
@@ -58,7 +58,7 @@ wss.on('connection', function (ws) {
         } catch (e) {
             ws.send(JSON.stringify({type: 'niceTry'}));
         }
-        if (message.type === 'first') {
+        if (message.type === 'setPlayerName') {
             WStoPlayerName.set(ws, message.name);
         } else if (message.type === 'message') {
             for (let i = 1; i < rooms[findRoomIndex(message.roomID)].length; i++) { // 1 because ignore the first element
@@ -75,9 +75,9 @@ wss.on('connection', function (ws) {
                 ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i])}));
             }
             rooms[roomIndex].push(ws);
-            ws.send(JSON.stringify({type: 'addYourself', name: message.name}));
+            ws.send(JSON.stringify({type: 'addYourself', name: message.name, hostName: WStoPlayerName.get(rooms[roomIndex][1])}));
         } else if (message.type === "removePlayer") {
-            if (message.roomID !== -1) {
+            if (message.roomID !== -1) { // do nothing if they're not in a room
                 removePlayer(ws, message.roomID, message.name);
             }
         } else if (message.type === "createRoom") {
@@ -106,11 +106,9 @@ wss.on('connection', function (ws) {
     });
 
     ws.on('close', function () {
-        // TODO: Send a message in chat saying that they left
-        // TODO: Update playerlist
         let roomID = WStoRoomID.get(ws);
         if (roomID !== undefined) {
-            removePlayer(ws, roomID, WStoPlayerName.get(ws));
+            removePlayer(ws, roomID, WStoPlayerName.get(ws)); // WStoRoomID gets deleted here
         }
         WStoPlayerName.delete(ws);
     });

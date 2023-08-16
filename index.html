@@ -14,7 +14,7 @@
         </u>
     </h1>
     <body style="background-color: #CCCCCC">
-        <button class="openchat" id="openchatbutton">Chat</button>
+        <button class="openchat" id="openchatbutton" style="display: none">Chat</button>
         <div class="chatpopup" id="chat" style="text-align: left;">
             <div class="form-container">
                 <h1>Chat</h1>
@@ -41,6 +41,7 @@
             Click a button to join a room!
         </div>
         <div id="availablerooms"></div>
+        <div id="noavailablerooms" style="display: none; font-size: large"><b>No available rooms found!</b></div>
         <div id="roomname" style="display: none">
             <p> Enter the name of your room! </p>
             <p><input type="text" id="roomnameinput"></p>
@@ -58,8 +59,9 @@
                 </p>
                 <button id="submitplayernamebutton">Submit</button>
             </div>
+            <div id="roomnamelabel" style="display: none; font-weight: bold; text-decoration: underline">Room Name: </div>
             <div id="goback" style="display: none">
-                <br>
+                <p></p>
                 <button id="gobackbutton">
                     Go Back
                 </button>
@@ -67,6 +69,7 @@
                 <br>
             </div>
             <div id="roombuttons" style="display: none">
+                <p>Do you want to create a room or join a room?</p>
                 <button id="createroombutton">
                     Create Room!
                 </button>
@@ -74,9 +77,14 @@
                     Join Room!
                 </button>
             </div>
-            <div id="waiting" style="display: none; font-size: large;">
+            <div id="waitingplayers" style="display: none; font-size: large">
                 <p>
                     Waiting for other players...
+                </p>
+            </div>
+            <div id="waitinghost" style="display: none; font-size: large">
+                <p>
+                    Waiting for host to start the game...
                 </p>
             </div>
             <div id="playerlist" style="display: none">
@@ -94,6 +102,8 @@
                 </button>
                 <p></p>
                 <div>
+                    <br>
+                    <div>Click here to upload an existing game! (If you have one)</div>
                     <input type="file" id="existinggamefile" onclick="this.value=null;" style="text-align-last: center">
                 </div>
                 <div id="invalidfiletext" style="display: none">

@@ -7,9 +7,14 @@ let playerName; // need this in case they have to reconnect
 
 // TODO: Show the user's name somewhere in the top left maybe
 
-// TODO: Join room with no available rooms has extra space
+// TODO: Show when someone is typing?
 
-// TODO: Text for host has been transferred
+// TODO: Ability to kick players from your room if you are the host
+
+function sendMessage(message) {
+    document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;
+    document.getElementById('chathistory').scrollTop = document.getElementById('chathistory').scrollHeight;
+}
 
 export function queue(name) {   
     playerName = name;
@@ -36,13 +41,16 @@ export function queue(name) {
             document.getElementById('openchatbutton').style.display = "inline";
             document.getElementById('openchatbutton').click();
             document.getElementById('roomname').style.display = "none";
-            document.getElementById('waiting').style.display = "inline";
+            document.getElementById('waitingplayers').style.display = "inline";
             document.getElementById('playerlist').style.display = "inline";
             addNewPlayer(playerName, true);
 
             document.getElementById('startgame').style.display = "inline";
             host = true;
-            ws.send(JSON.stringify({type: 'createRoom', roomName: document.getElementById('roomnameinput').value || `${playerName}'s Room`}));
+            let roomName = document.getElementById('roomnameinput').value || `${playerName}'s Room`;
+            document.querySelector('#roomnamelabel').innerHTML += roomName;
+            document.getElementById('roomnamelabel').style.display = "inline";
+            ws.send(JSON.stringify({type: 'createRoom', roomName: roomName}));
         }
 
         document.getElementById('joinroombutton').onclick = function() {
@@ -54,6 +62,7 @@ export function queue(name) {
         }
 
         document.getElementById('refreshroomsbutton').onclick = function() {
+            document.getElementById('noavailablerooms').style.display = "none";
             for (const child of document.getElementById('availablerooms').children) {
                 child.remove();
             }
@@ -63,11 +72,15 @@ export function queue(name) {
         document.getElementById('goback').onclick = function() {
             document.getElementById('goback').style.display = "none";
             document.getElementById('roombuttons').style.display = "inline";
+            document.getElementById('openchatbutton').style.display = "none";
             document.getElementById('playerlist').style.display = "none";
-            document.getElementById('waiting').style.display = "none";
+            document.getElementById('waitingplayers').style.display = "none";
+            document.getElementById('waitinghost').style.display = "none";
             document.getElementById('availableroomstext').style.display = "none";
             document.getElementById('roomname').style.display = "none";
+            document.getElementById('roomnamelabel').style.display = "none";
             document.getElementById('startgame').style.display = "none";
+            document.getElementById('noavailablerooms').style.display = "none";
             while (document.getElementById('playerlist').children.length > 1) {
                 document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].remove();
             }
@@ -104,13 +117,13 @@ export function queue(name) {
                     document.getElementById('entiregame').style.display = "inline";
                 }, 1000);
             } else if (message.type === "playerJoined") {
-                document.getElementById('waiting').style.display = "none";
+                document.getElementById('waitingplayers').style.display = "none";
                 document.getElementById('playerlist').style.display = "inline";
                 addNewPlayer(message.newName, false);
                 document.getElementById('startgamebutton').disabled = false;
-                document.querySelector('#chathistory').innerHTML += `${message.newName} joined your room!\n`;
+                sendMessage(`${message.newName} joined your room!`);
             } else if (message.type === "message") {
-                document.querySelector('#chathistory').innerHTML += `${message.name}: ${message.message}\n`;
+                sendMessage(`${message.name}: ${message.message}`);
             } else if (message.type === 'sendRooms') {
                 document.getElementById('loader').style.display = "none";
                 document.body.style.backgroundColor = '#CCCCCC';
@@ -118,7 +131,8 @@ export function queue(name) {
                 for (const room of message.rooms) {
                     let roomButton = document.createElement('button');
                     // TODO: On button hover, show who is in that room
-                    roomButton.innerHTML = room[0].name;
+                    let roomName = room[0].name;
+                    roomButton.innerHTML = roomName;
                     document.getElementById('availablerooms').appendChild(roomButton);
                     roomButton.onclick = function() {
                         currentRoomID = room[0].ID;
@@ -130,7 +144,14 @@ export function queue(name) {
                         document.getElementById('openchatbutton').click();
                         document.getElementById('availableroomstext').style.display = "none";
                         document.getElementById('playerlist').style.display = "inline";
+                        document.getElementById('waitinghost').style.display = "inline";
+
+                        document.querySelector('#roomnamelabel').innerHTML += roomName;
+                        document.getElementById('roomnamelabel').style.display = "inline";
                     }
+                }
+                if (message.rooms.length === 0) {
+                    document.getElementById('noavailablerooms').style.display = "inline";
                 }
             } else if (message.type === 'ID') {
                 currentRoomID = message.ID;
@@ -138,19 +159,23 @@ export function queue(name) {
                 addNewPlayer(message.name, false);
             } else if (message.type === 'addYourself') {
                 addNewPlayer(message.name, true);
+                sendMessage(`You joined ${message.hostName}'s room!`)
             } else if (message.type === 'removePlayer') {
-                document.querySelector('#chathistory').innerHTML += `${message.name} left your room!\n`;
+                sendMessage(`${message.name} left your room!`);
                 if (message.newHost) {
-                    console.log('message.newHost: ', message.newHost);
                     document.getElementById('playerlist').children[1].remove();
                     document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
-                    document.querySelector('#chathistory').innerHTML += `Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!\n`;
+                    sendMessage(`Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!`);
                 } else {
                     document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 }
+                document.getElementById('waitinghost').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             } else if (message.type === 'newHost') {
                 host = true;
+                document.getElementById('waitinghost').style.display = "none";
+                document.getElementById('waitingplayers').style.display = document.getElementById('playerlist').children.length === 2 ? "inline" : "none";
+
                 document.getElementById('startgame').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             } else if (message.type === 'startGame') {
