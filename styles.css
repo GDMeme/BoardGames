@@ -116,7 +116,7 @@ button:hover:disabled {
   
   /* Full-width textarea */
   .form-container textarea {
-    line-height: 1.5;
+    line-height: 2;
     width: 100%;
     padding: 15px;
     margin: 5px 0 22px 0;
