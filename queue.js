@@ -4,11 +4,13 @@ let currentRoomID = -1;
 let host = false;
 let playerName; // need this in case they have to reconnect
 
-// TODO: Show the user's name somewhere in the top left maybe
-
 // TODO: Show when someone is typing?
 
-// TODO: Ability to kick players from your room if you are the host
+// TODO: Ability to ban players from your room if you are the host (They can't join back)
+
+// TODO: Ability to change player name
+
+// TODO: Ability to change room name
 
 function sendMessage(message) {
     document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;
@@ -42,7 +44,7 @@ export function queue(name) {
             document.getElementById('roomname').style.display = "none";
             document.getElementById('waitingplayers').style.display = "inline";
             document.getElementById('playerlist').style.display = "inline";
-            addNewPlayer(playerName, true, true);
+            addNewPlayer(playerName, true, true, ws, -1); // -1 because can't kick yourself
 
             document.getElementById('startgame').style.display = "inline";
             host = true;
@@ -120,7 +122,7 @@ export function queue(name) {
             } else if (message.type === "playerJoined") {
                 document.getElementById('waitingplayers').style.display = "none";
                 document.getElementById('playerlist').style.display = "inline";
-                addNewPlayer(message.newName, false);
+                addNewPlayer(message.newName, false, false, ws, message.index);
                 document.getElementById('startgamebutton').disabled = false;
                 sendMessage(`${message.newName} joined your room!`);
             } else if (message.type === "message") {
@@ -157,26 +159,25 @@ export function queue(name) {
             } else if (message.type === 'ID') {
                 currentRoomID = message.ID;
             } else if (message.type === 'addPlayer') {
-                addNewPlayer(message.name, false);
+                addNewPlayer(message.name, false, false, ws, message.index);
             } else if (message.type === 'addYourself') {
-                addNewPlayer(message.name, true);
+                addNewPlayer(message.name, true, false, ws, -1); // -1 because can't kick yourself
                 sendMessage(`You joined ${message.hostName}'s room!`)
             } else if (message.type === 'removePlayer') {
                 sendMessage(`${message.name} left your room!`);
                 document.getElementById('playerlist').children[message.indexToRemove + 1].children[0]?.remove();
                 document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
                 if (message.newHost) {
-                    document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
                     sendMessage(`Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!`);
+                    document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
                 }
-                document.getElementById('waitinghost').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             } else if (message.type === 'newHost') {
                 host = true;
 
                 // * * Adding kick buttons for each player
                 for (let i = 2; i < document.getElementById('playerlist').children.length; i++) { // can't kick yourself (the host)
-                    addKickButton(document.getElementById('playerlist').children[i]);
+                    addKickButton(document.getElementById('playerlist').children[i], ws, i - 2); // index includes all players (including host)
                 }
 
                 document.getElementById('waitinghost').style.display = "none";
@@ -184,8 +185,15 @@ export function queue(name) {
 
                 document.getElementById('startgame').style.display = "inline";
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
+            } else if (message.type === 'goBack') {
+                document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
                 start();
+            } else if (message.type === 'kickedPlayer') {
+                document.getElementById('goback').click();
+            } else if (message.type === 'kickMessage') {
+                sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
+
             }
         });
 
@@ -194,21 +202,25 @@ export function queue(name) {
     });
 };
 
-function addNewPlayer(name, bold, flag) { // flag true means don't add kick button
+function addNewPlayer(name, bold, flag, ws, index) { // flag true means don't add kick button
     let newPlayer = document.createElement('li');
     newPlayer.innerHTML = name + (document.getElementById('playerlist').children.length === 1 ? ' (Host)' : '');
     newPlayer.style.fontWeight = bold ? 'bold' : 'normal';
     newPlayer.style.marginBottom = '10px';
     if (host && !flag) {
-        addKickButton(newPlayer);
+        addKickButton(newPlayer, ws, index);
     }
     document.getElementById('playerlist').appendChild(newPlayer);
 }
 
-function addKickButton(parent) {
+function addKickButton(parent, ws, index) { // index includes all players (including host)
     let kickButton = document.createElement('button');
     kickButton.innerHTML = 'Kick Player';
     kickButton.style.marginLeft = '5px';
+    kickButton.onclick = function() {
+        console.log('index is: ', index);
+        ws.send(JSON.stringify({type: 'kickPlayer', indexToKick: index, roomID: currentRoomID}));
+    }
     parent.appendChild(kickButton);
 }
 

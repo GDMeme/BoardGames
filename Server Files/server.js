@@ -37,6 +37,7 @@ function removePlayer(ws, roomID, playerName) {
     WStoRoomID.delete(ws);
     let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
     rooms[roomIndex].splice(playerIndex, 1);
+    console.log('indextoremove is: ', playerIndex - 1);
     for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
         rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: playerName, indexToRemove: playerIndex - 1, newHost: playerIndex === 1})); // 1 because ignore the first element
     }
@@ -73,8 +74,9 @@ wss.on('connection', function (ws) {
             WStoRoomID.set(ws, message.roomID);
             for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
                 // send message to original person as well
-                rooms[roomIndex][i].send(JSON.stringify({type: 'playerJoined', newName: message.name}));
-                ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i])}));
+                // index includes all players (including host)
+                rooms[roomIndex][i].send(JSON.stringify({type: 'playerJoined', newName: message.name, index: rooms[roomIndex].length - 2})); 
+                ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i]), index: rooms[roomIndex].length - 2}));
             }
             rooms[roomIndex].push(ws);
             ws.send(JSON.stringify({type: 'addYourself', name: message.name, hostName: WStoPlayerName.get(rooms[roomIndex][1])}));
@@ -104,7 +106,18 @@ wss.on('connection', function (ws) {
             } else {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             }
-        } // TODO: playerCounter has to be server-side, tells the client whose turn it is
+        } else if (message.type === 'kickPlayer') {
+            let roomIndex = findRoomIndex(message.roomID);
+            if (ws === rooms[roomIndex][1]) { // 1 because ignore the first element (verify that they are the host)
+                rooms[roomIndex][message.indexToKick + 2].send(JSON.stringify({type: 'kickedPlayer'})); // add 2 because ignore the first element and the host spot
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2}));
+                }
+                // they are removed from rooms when removePlayer is received
+            } else {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            }
+        }
     });
 
     ws.on('close', function () {
