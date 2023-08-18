@@ -3,6 +3,7 @@ import { start } from './start.js';
 let currentRoomID = -1;
 let host = false;
 let playerName; // need this in case they have to reconnect
+let ws;
 
 // TODO: Show when someone is typing?
 
@@ -19,8 +20,9 @@ function sendMessage(message) {
 
 export function queue(name) {   
     playerName = name;
-    connect().then(function(ws) {
-        ws.send(JSON.stringify({type: 'setPlayerName', ws: ws, name: playerName}));
+    connect().then(function(websocket) {
+        ws = websocket;
+        ws.send(JSON.stringify({type: 'setPlayerName', name: playerName}));
         document.getElementById('roombuttons').style.display = "inline";
         document.body.style.backgroundColor = "#CCCCCC";
 
@@ -44,7 +46,7 @@ export function queue(name) {
             document.getElementById('roomname').style.display = "none";
             document.getElementById('waitingplayers').style.display = "inline";
             document.getElementById('playerlist').style.display = "inline";
-            addNewPlayer(playerName, true, true, ws, -1); // -1 because can't kick yourself
+            addNewPlayer(playerName, true); // -1 because can't kick yourself
 
             document.getElementById('startgame').style.display = "inline";
             host = true;
@@ -122,7 +124,7 @@ export function queue(name) {
             } else if (message.type === "playerJoined") {
                 document.getElementById('waitingplayers').style.display = "none";
                 document.getElementById('playerlist').style.display = "inline";
-                addNewPlayer(message.newName, false, false, ws, message.index);
+                addNewPlayer(message.newName, false);
                 document.getElementById('startgamebutton').disabled = false;
                 sendMessage(`${message.newName} joined your room!`);
             } else if (message.type === "message") {
@@ -159,26 +161,29 @@ export function queue(name) {
             } else if (message.type === 'ID') {
                 currentRoomID = message.ID;
             } else if (message.type === 'addPlayer') {
-                addNewPlayer(message.name, false, false, ws, message.index);
+                addNewPlayer(message.name, false);
             } else if (message.type === 'addYourself') {
-                addNewPlayer(message.name, true, false, ws, -1); // -1 because can't kick yourself
+                addNewPlayer(message.name, true); // -1 because can't kick yourself
                 sendMessage(`You joined ${message.hostName}'s room!`)
             } else if (message.type === 'removePlayer') {
                 sendMessage(`${message.name} left your room!`);
                 document.getElementById('playerlist').children[message.indexToRemove + 1].children[0]?.remove();
                 document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
+                removeKickButtons();
+                generateKickButtons();
                 if (message.newHost) {
                     sendMessage(`Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!`);
                     document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
+                }
+                if (document.getElementById('playerlist').children.length === 2) {
+                    document.getElementById('waitingplayers').style.display = "inline";
                 }
                 document.getElementById('startgamebutton').disabled = !(document.getElementById('playerlist').children.length > 2);
             } else if (message.type === 'newHost') {
                 host = true;
 
                 // * * Adding kick buttons for each player
-                for (let i = 2; i < document.getElementById('playerlist').children.length; i++) { // can't kick yourself (the host)
-                    addKickButton(document.getElementById('playerlist').children[i], ws, i - 2); // index includes all players (including host)
-                }
+                addKickButton();
 
                 document.getElementById('waitinghost').style.display = "none";
                 document.getElementById('waitingplayers').style.display = document.getElementById('playerlist').children.length === 2 ? "inline" : "none";
@@ -202,27 +207,50 @@ export function queue(name) {
     });
 };
 
-function addNewPlayer(name, bold, flag, ws, index) { // flag true means don't add kick button
+function addNewPlayer(name, bold) { // flag true means don't add kick button
     let newPlayer = document.createElement('li');
     newPlayer.innerHTML = name + (document.getElementById('playerlist').children.length === 1 ? ' (Host)' : '');
     newPlayer.style.fontWeight = bold ? 'bold' : 'normal';
     newPlayer.style.marginBottom = '10px';
-    if (host && !flag) {
-        addKickButton(newPlayer, ws, index);
-    }
     document.getElementById('playerlist').appendChild(newPlayer);
+    if (host) {
+        removeKickButtons();
+        generateKickButtons();
+    }
 }
 
-function addKickButton(parent, ws, index) { // index includes all players (including host)
-    let kickButton = document.createElement('button');
-    kickButton.innerHTML = 'Kick Player';
-    kickButton.style.marginLeft = '5px';
-    kickButton.onclick = function() {
-        console.log('index is: ', index);
-        ws.send(JSON.stringify({type: 'kickPlayer', indexToKick: index, roomID: currentRoomID}));
+function generateKickButtons() {
+    for (let i = 2; i < document.getElementById('playerlist').children.length; i++) {
+        let kickButton = document.createElement('button');
+        kickButton.innerHTML = 'Kick Player';
+        kickButton.style.marginLeft = '5px';
+        kickButton.onclick = function() {
+            ws.send(JSON.stringify({type: 'kickPlayer', indexToKick: i - 2, roomID: currentRoomID})); // index includes all players except host
+        }
+        document.getElementById('playerlist').children[i].appendChild(kickButton);
     }
-    parent.appendChild(kickButton);
 }
+
+function removeKickButtons() {
+    for (let i = 2; i < document.getElementById('playerlist').children.length; i++) {
+        document.getElementById('playerlist').children[i].children[0]?.remove();
+       
+    }
+}
+
+// function addKickButton(parent, ws, index) { 
+//     let kickButton = document.createElement('button');
+//     kickButton.innerHTML = 'Kick Player';
+//     kickButton.style.marginLeft = '5px';
+//     kickButton.onclick = function() { // TODO: Flawed; if kick top person, other indexes don't change
+        // TODO: Every time someone is kicked or someone leaves, regenerate all the kick buttons
+        
+//         console.log(kickButton.parentNode.parentNode.children.length);
+//         console.log('index is: ', index);
+//         ws.send(JSON.stringify({type: 'kickPlayer', indexToKick: index, roomID: currentRoomID}));
+//     }
+//     parent.appendChild(kickButton);
+// }
 
 function connect() {
     return new Promise(function(resolve, reject) {
