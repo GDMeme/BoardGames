@@ -169,8 +169,10 @@ export function queue(name) {
                 sendMessage(`${message.name} left your room!`);
                 document.getElementById('playerlist').children[message.indexToRemove + 1].children[0]?.remove();
                 document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
-                removeKickButtons();
-                generateKickButtons();
+                if (host) {
+                    removeKickButtons();
+                    generateKickButtons();
+                }
                 if (message.newHost) {
                     sendMessage(`Host has been automatically transferred to ${document.getElementById('playerlist').children[1].innerHTML}!`);
                     document.getElementById('playerlist').children[1].innerHTML += ' (Host)';
@@ -183,7 +185,8 @@ export function queue(name) {
                 host = true;
 
                 // * * Adding kick buttons for each player
-                addKickButton();
+                // will never have kick buttons before this
+                generateKickButtons();
 
                 document.getElementById('waitinghost').style.display = "none";
                 document.getElementById('waitingplayers').style.display = document.getElementById('playerlist').children.length === 2 ? "inline" : "none";
