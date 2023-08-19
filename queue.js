@@ -9,9 +9,12 @@ let ws;
 
 // TODO: Ability to ban players from your room if you are the host (They can't join back)
 
-// TODO: Ability to change player name
+// TODO: Ability to change player name (until the game starts)
+// https://www.w3schools.com/icons/tryit.asp?filename=tryicons_fa-edit
+// https://stackoverflow.com/questions/12945825/adding-an-onclick-event-to-a-div-element
+// TODO: Account for start game while someone is changing their name (only client side)
 
-// TODO: Ability to change room name
+// TODO: Ability to change room name (until the game starts)
 
 function sendMessage(message) {
     document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;

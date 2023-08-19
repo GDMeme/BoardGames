@@ -1,4 +1,4 @@
-import { Game } from './game.js';
+import { Game } from './Server Files/game.js';
 
 import { buy } from './shop.js';
 
@@ -11,7 +11,6 @@ import { endTurn } from './endturn.js';
 import * as C from './constants.js'
 
 export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
-    document.getElementById('openchatbutton').style.display = "inline";
     document.getElementById('hovertip').style.display = "inline";
 
     document.getElementById('startgametext').style.display = "inline";
@@ -74,7 +73,7 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         }
     }
 
-    let income;
+    let income; // TODO: Could put this as part of game class
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
         document.getElementById('rolldoubles').style.display = "none";
