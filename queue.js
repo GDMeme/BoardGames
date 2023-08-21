@@ -156,7 +156,7 @@ export function queue(name) {
                         document.getElementById('playerlist').style.display = "inline";
                         document.getElementById('waitinghost').style.display = "inline";
 
-                        document.querySelector('#roomnamelabel').innerHTML += roomName;
+                        document.querySelector('#roomnamelabel').innerHTML = `Room Name: ${roomName}`;
                         document.getElementById('roomnamelabel').style.display = "inline";
                     }
                 }
