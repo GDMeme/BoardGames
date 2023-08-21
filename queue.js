@@ -9,6 +9,8 @@ let ws;
 
 // TODO: Ability to ban players from your room if you are the host (They can't join back)
 
+// TODO: password protected room (can change password too)
+
 // TODO: Ability to change player name (until the game starts)
 // https://www.w3schools.com/icons/tryit.asp?filename=tryicons_fa-edit
 // https://stackoverflow.com/questions/12945825/adding-an-onclick-event-to-a-div-element
@@ -244,26 +246,12 @@ function removeKickButtons() {
     }
 }
 
-// function addKickButton(parent, ws, index) { 
-//     let kickButton = document.createElement('button');
-//     kickButton.innerHTML = 'Kick Player';
-//     kickButton.style.marginLeft = '5px';
-//     kickButton.onclick = function() { // TODO: Flawed; if kick top person, other indexes don't change
-        // TODO: Every time someone is kicked or someone leaves, regenerate all the kick buttons
-        
-//         console.log(kickButton.parentNode.parentNode.children.length);
-//         console.log('index is: ', index);
-//         ws.send(JSON.stringify({type: 'kickPlayer', indexToKick: index, roomID: currentRoomID}));
-//     }
-//     parent.appendChild(kickButton);
-// }
-
 function connect() {
     return new Promise(function(resolve, reject) {
         var ws = new WebSocket('wss://localhost:8080');
         document.getElementById('connectionfailed').style.display = "none";
         document.getElementById('loader').style.display = "inline";
-        document.getElementById('waitingforserver').style.display = "inline";
+        document.getElementById('waitingforserver').style.display = "block";
         document.body.style.backgroundColor = "#645a5a";
         ws.onopen = function() {
             document.getElementById('loader').style.display = "none";
