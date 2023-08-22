@@ -1,4 +1,8 @@
-import { start } from './start.js';
+import { startGameLayout } from './startgamelayout.js';
+
+import { playerTurnLayout } from './playerturnlayout.js';
+
+import * as C from './constants.js';
 
 let currentRoomID = -1;
 let host = false;
@@ -17,6 +21,8 @@ let ws;
 // TODO: Account for start game while someone is changing their name (only client side)
 
 // TODO: Ability to change room name (until the game starts)
+
+// TODO: Have an action history of what happened in the bottom left or something
 
 function sendMessage(message) {
     document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;
@@ -116,6 +122,23 @@ export function queue(name) {
             ws.send(JSON.stringify({type: 'startGame', roomID: currentRoomID}));
         }
 
+        document.getElementById('endturnbutton').onclick = function() {
+            ws.send(JSON.stringify({type: 'endTurn', roomID: currentRoomID}));
+
+            // TODO: When it's the next player's turn, send a message to everyone to update this innerHTML and style display
+            document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
+            document.getElementById('rolldicetext').style.display = "none";
+        }
+
+        const buttonIDs = C.buildings.map(building => building.name);
+        for (let i = 0; i < buttonIDs.length; i++) {
+            const id = buttonIDs[i];
+            document.getElementById(`buy${id}button`).onclick = function() {
+                ws.send(JSON.stringify({type: 'buySomething', roomID: currentRoomID, shopIndex: i}));
+                // buy(i, game);
+            }
+        }
+
         // Listen for messages
         ws.addEventListener("message", (message) => {
             message = JSON.parse(message.data); // don't need try/catch because server is sending the message (guaranteed to be valid)
@@ -174,7 +197,7 @@ export function queue(name) {
                 sendMessage(`${message.name} left your room!`);
                 document.getElementById('playerlist').children[message.indexToRemove + 1].children[0]?.remove();
                 document.getElementById('playerlist').children[message.indexToRemove + 1].remove();
-                if (host) {
+                if (host) { // this is fine because the server verifies if they are the host before kicking
                     removeKickButtons();
                     generateKickButtons();
                 }
@@ -201,12 +224,27 @@ export function queue(name) {
             } else if (message.type === 'goBack') {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
-                start();
+                startGameLayout(document.getElementById('playerlist').children.length - 1, ws, currentRoomID); // 1 because it has an extra child
+                document.getElementById('playerturntext').style.display = "block";
+                if (message.startingPlayer) {
+                    playerTurnLayout();
+                }
             } else if (message.type === 'kickedPlayer') {
                 document.getElementById('goback').click();
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
-
+            } else if (message.type === 'yourTurn') {
+                playerTurn(); // TODO: fix this
+            } else if (message.type === 'rolledDice') {
+                document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerCounter + 1} rolled a ${message.roll} </u>`;
+                if (message.yourTurn) {
+                    document.getElementById('endturnbutton').disabled = false; // enable the end turn button
+        
+                    document.getElementById('roll2dicecheckbox').disabled = !(notReroll && currentPlayer.landmarks[3] && currentPlayer.landmarks[0]); // able to roll two dice if rerolling, radio tower and train station
+                    document.getElementById('rerollbutton').disabled = !(currentPlayer.landmarks[3] && notReroll);
+                }
+            } else if (message.type === 'boughtSomething') {
+                // message.shopIndex, message.playerCounter
             }
         });
 

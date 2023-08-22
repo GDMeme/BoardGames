@@ -182,21 +182,19 @@
                     </div>
                 </div>
                 <div>
-                    <div id="startgametext" style="display: none">
+                    <div id="playerturntext" style="display: none">
+                        Player 1's turn!
+                    </div>
+                    <div id="rolldicetext" style="display: none">
                         <p>
-                            <div id="playerturn">
-                                Player 1's turn!
+                            <div>
+                                <input type="checkbox" id="roll2dicecheckbox" disabled>
+                                    Click here to roll 2 dice instead!
+                                </input>
+                                <button id="rerollbutton" disabled>
+                                    Click here to reroll your dice!
+                                </button>
                             </div>
-                        </p>
-                        <p>
-                        <div>
-                            <input type="checkbox" id="roll2dicecheckbox" disabled>
-                                Click here to roll 2 dice instead!
-                            </input>
-                            <button id="rerollbutton" disabled>
-                                Click here to reroll your dice!
-                            </button>
-                        </div>
                         </p>
                         <p>
                             <div>
@@ -537,8 +535,8 @@
                         <div id="stadiumtext4" style="display: none">
                             You lost x coins.
                         </div>
+                        <br>
                     </div>
-                    <br id="stadiumbreak" style="display: none">
                     <div id="tvplayertextbuttons" style="display: none">
                         <div id="tvplayertext">
                             <u>
@@ -553,8 +551,8 @@
                                 <button id="tvplayer4button" style="display: none">Player 4</button>
                             </p>
                         </div>
+                        <br>
                     </div>
-                    <br id="tvstationbreak" style="display: none">
                     <div id="businesstext" style="display: none">
                         <div id="businesstext4">
                             Player x received z. Player y lost z.
@@ -562,8 +560,8 @@
                         <div id="businesstext5">
                             Player x lost a. Player y received a.
                         </div>
+                        <br>
                     </div>
-                    <br id="businessbreak" style="display: none">
                     <div id="redincome">
                         <div id="redincome1" style="display: none">
                             Player 1 received x from red establishments.
@@ -577,21 +575,24 @@
                         <div id="redincome4" style="display: none">
                             Player 4 lost x from red establishments.
                         </div>
+                        <br>
                     </div>
-                    <br id="redincomebreak" style="display: none">
                     <div id="greenblueincome1" style="display: none">
                         Player 1 received x from green/blue establishments. 
+                        <br>
                     </div>
                     <div id="greenblueincome2" style="display: none">
                         Player 2 received x from green/blue establishments. 
+                        <br>
                     </div>
                     <div id="greenblueincome3" style="display: none">
                         Player 3 received x from green/blue establishments. 
+                        <br>
                     </div>
                     <div id="greenblueincome4" style="display: none">
                         Player 4 received x from green/blue establishments. 
+                        <br>
                     </div>
-                    <br id="greenblueincomebreak" style="display: none">
                     <div>
                         <button id="endturnbutton" disabled style="display: none">
                             <div style="font-size: 35px">

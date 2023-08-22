@@ -46,11 +46,3 @@ export function enableShop(game) {
         document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || currentPlayer.landmarks[i - 15];
     }
 }
-
-function maximumEstablishments(players, index) { // fine to send players since only reading, not writing
-    let sum = 0;
-    for (let i = 0; i < players.length; i++) {
-        sum += players[i].establishments[index];
-    }
-    return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
-}

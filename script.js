@@ -1,9 +1,7 @@
 import { queue } from './queue.js';
 import { loadGame } from './loadGame.js';
 
-// start(4, ['a', 'b', 'c', 'd']);
-
-document.getElementById('testbutton').onclick = function() {
+document.getElementById('testbutton').onclick = function() { // TODO: Remember to remove this
     document.getElementById('playerlist').appendChild(document.createElement('li'))
 }
 

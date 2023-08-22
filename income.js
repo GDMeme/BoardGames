@@ -66,8 +66,6 @@ export function income(roll, game) {
     } else if (roll === 6) { // shouldn't make a difference if purple goes before green/blue
         let currentPlayer = game.players[game.playerCounter];
         if (currentPlayer.establishments[6]) { 
-            document.getElementById('stadiumbreak').style.display = "inline";
-
             for (let i = 0; i < game.players.length; i++) {
                 if (i !== game.playerCounter) {  
                     purpleIncome[i] = exchangeCoins(currentPlayer, game.players[i], 2);
@@ -81,8 +79,6 @@ export function income(roll, game) {
             document.querySelector(`#stadiumtext${game.playerCounter + 1}`).innerHTML = `<div>Player ${game.playerCounter + 1} received ${purpleIncome[game.playerCounter]} coins from Stadium.</div>`;
         }
         if (currentPlayer.establishments[7]) {
-            document.getElementById('tvstationbreak').style.display = "inline";
-
             document.getElementById('tvplayertextbuttons').style.display = "inline";
             document.getElementById('tvplayerbuttons').style.display = "inline";
             document.querySelector('#tvplayertext').innerHTML = "Who would you like to take 5 coins from?";
@@ -108,8 +104,6 @@ export function income(roll, game) {
 
         }
         if (currentPlayer.establishments[8]) {
-            document.getElementById('businessbreak').style.display = "inline";
-
             const buttonIDs = C.buildings.map(building => building.name);
             const displayNames = C.buildings.map(building => building.displayName);
 
@@ -229,7 +223,6 @@ export function income(roll, game) {
 
     // red income text
     if (!redIncome.every(income => income === 0)) {
-        document.getElementById('redincomebreak').style.display = "inline";
         for (let i = 0; i < game.players.length; i++) {
             document.getElementById(`redincome${i + 1}`).style.display = redIncome[i] === 0 ? "none" : "flex";
             document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${redIncome[i] > 0 ? 'received' : 'lost'} ${redIncome[i] > 0 ? redIncome[i] : -redIncome[i]} ${(redIncome[i] > 1 || redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
@@ -238,7 +231,6 @@ export function income(roll, game) {
 
     // green/blue income text
     if (!greenBlueIncome.every(income => income === 0)) {
-        document.getElementById('greenblueincomebreak').style.display = "inline";
         for (let i = 0; i < game.players.length; i++) {
             document.getElementById(`greenblueincome${i + 1}`).style.display = greenBlueIncome[i] === 0 ? "none" : "flex";
             document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${greenBlueIncome[i]} ${(greenBlueIncome[i] > 1 || greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;

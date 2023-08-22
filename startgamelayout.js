@@ -2,24 +2,22 @@ import { Game } from './Server Files/game.js';
 
 import { buy } from './shop.js';
 
-import { playerTurn } from './playerturn.js';
+import { playerTurnLayout } from './playerturnlayout.js';
 
 import { updateBalances, updateEstablishmentsLandmarks } from './income.js';
 
 import { endTurn } from './endturn.js';
 
-import * as C from './constants.js'
+import * as C from './constants.js';
 
-export function start(numberOfPlayers, existingGame) { // existingGame could also represent the player names
+export function startGameLayout(numberOfPlayers) { // existingGame could also represent the player names
+
     document.getElementById('hovertip').style.display = "inline";
-
-    document.getElementById('startgametext').style.display = "inline";
     document.querySelector('#titletext').innerHTML = "<u>Machi Koro</u>";
-    document.getElementById('endturnbutton').style.display = "inline"; // show the end turn button
+
     document.getElementById('player12inventory').style.display = "flex";
     document.getElementById('player34inventory').style.display = "flex";
-    document.getElementById('savegamebutton').style.display = "inline"; // show the save game button
-    document.getElementById('invalidfiletext').style.display = "inline";
+
     if (numberOfPlayers === 4) {
         document.getElementById('player3inventory').style.visibility = "visible";
         document.getElementById('player4inventory').style.visibility = "visible";
@@ -34,26 +32,29 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         document.getElementById('player4inventory').style.visibility = "hidden";
     }
 
-    let game = new Game(numberOfPlayers, existingGame); // this is fine (if saved game, game.playerNames will be undefined but won't produce undefined behaviour)
-    if (Array.isArray(existingGame)) { // existingGame represents the player names
-        for (let i = 0; i < numberOfPlayers; i++) {
-            document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${existingGame[i]} </font></u>`
-        }
-    } else { // existingGame represents the saved game
-        game = Object.assign(game, existingGame);
-        updateBalances(game.players);
-        updateEstablishmentsLandmarks(game); // TODO: fix this line so that updateEstablishmentsLandmarks directly accesses the constant
+    // TODO: Previous load game stuff, fix this
+    // if (Array.isArray(existingGame)) { // existingGame represents the player names
+    //     for (let i = 0; i < numberOfPlayers; i++) {
+    //         document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${existingGame[i]} </font></u>`
+    //     }
+    // } else { // existingGame represents the saved game
+    //     game = Object.assign(game, existingGame);
+    //     updateBalances(game.players);
+    //     updateEstablishmentsLandmarks(game);
 
-        for (let i = 0; i < numberOfPlayers; i++) {
-            document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${game.playerNames[i]} </font></u>`
-        }   
+    //     for (let i = 0; i < numberOfPlayers; i++) {
+    //         document.querySelector(`#player${i + 1}text`).innerHTML = `<u><font size="6"> ${game.playerNames[i]} </font></u>`
+    //     }   
 
-        document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
-    }
+    //     document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
+    // }
 
     const buttonIDs = C.buildings.map(building => building.name);
+
+    // * * On hover, show the card image
+    // TODO: Fix this
     for (let i = 0; i < numberOfPlayers; i++) {
-        for (let j = 0; j < 19; j++) { // establishments
+        for (let j = 0; j < 19; j++) {
             document.getElementById(`${buttonIDs[j]}${i + 1}`).onmouseout = function () {
                 document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? (game.players[game.playerCounter].landmarks[j - 15] ? 'unlocked' : 'locked') : ''}image`).style.display = "none";
                 document.getElementById('cardexplanation').style.display = "none";
@@ -73,6 +74,23 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         }
     }
 
+    for (let i = 0; i < buttonIDs.length; i++) {
+        const id = buttonIDs[i];
+        document.getElementById(`buy${id}button`).onclick = function() {
+            
+            // buy(i, game);
+        }
+    }
+
+
+
+
+
+
+
+
+
+    // * * Reroll stuff
     let income; // TODO: Could put this as part of game class
     document.getElementById('rerollbutton').onclick = function () {
         document.getElementById('rerollbutton').disabled = true;
@@ -85,23 +103,12 @@ export function start(numberOfPlayers, existingGame) { // existingGame could als
         updateBalances(game.players);
 
         game.playerCounter = endTurn(game, true); // true means player rerolled
-        playerTurn(game, false);
+        playerTurnLayout(game, false);
     }
 
-    document.getElementById('rolldicebutton').onclick = function () {
-        income = playerTurn(game, true); // need to keep track of income to account for rerolling
-    }
-
-    for (let i = 0; i < buttonIDs.length; i++) {
-        const id = buttonIDs[i];
-        document.getElementById(`buy${id}button`).onclick = function() {
-            buy(i, game); // TODO: fix this line so that updateEstablishmentsLandmarks directly accesses the constant
-        }
-    }
-
-    document.getElementById('endturnbutton').onclick = function() {
-        game.playerCounter = endTurn(game, false);
-    }
+    // document.getElementById('rolldicebutton').onclick = function () {
+    //     income = playerTurnLayout(game, true); // need to keep track of income to account for rerolling
+    // }
 
     document.getElementById('savegamebutton').onclick = function() {
         document.getElementById('savegametext').style.display = "inline";
