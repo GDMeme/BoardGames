@@ -5,7 +5,13 @@ export class Game {
         let ID, name, numberOfPlayers;
 
         let state = 0;
-        let previousState; // If TV Station or Business Center activate, need to keep track of the previous state
+        let TVStationActivated = 0; 
+        // * * 0: TV Station did not activate
+        // * * 1: TV Station activated, did not steal coins yet
+        // * * 2: TV Station activated, already stole coins
+        let businessCenterActivated = 0;
+        let businessTargetPlayerIndex = -1;
+        let businessReceiveIndex = -1;
         let income;
     }
 }

@@ -165,7 +165,9 @@ wss.on('connection', function (ws) {
             let roomIndex = findRoomIndex(roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || game.state === C.state.TVStation) { // any other state is OK
+            let TVStationCheck = (game.TVStationActivated === C.purpleState.activateFinish) || (game.TVStationActivated === C.purpleState.didNotActivate);
+            let businessCenterCheck = (game.businessCenterActivated === C.purpleState.activateFinish) || (game.TVStationActivated === C.purpleState.didNotActivate);
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || !TVStationCheck || !businessCenterCheck) { // any other state is OK
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 // * * Update playerCounter (if applicable)
@@ -179,6 +181,12 @@ wss.on('connection', function (ws) {
                 // * * Update the game state
                 game.state = C.state.newTurn;
 
+                // * * Reset the purple establishment states
+                game.TVStationActivated = C.purpleState.didNotActivate;
+                game.businessCenterActivated = C.purpleState.didNotActivate;
+                game.businessTargetPlayerIndex = -1;
+                game.businessReceiveIndex = -1;
+
                 // * * Reset income for next turn
                 game.income = undefined;
 
@@ -191,8 +199,9 @@ wss.on('connection', function (ws) {
             let playerCounter = game.playerCounter;
 
             // * * Verify they have not already rolled/Radio Tower stuff
-            let alreadyRolled = (game.state === C.state.rerolled) || (game.state === C.state.rerolledDoubles);
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRolled || game.state === C.state.bought || game.state === C.state.TVStation || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
+            let alreadyRerolled = (game.state === C.state.rerolled) || (game.state === C.state.rerolledDoubles);
+            let businessCenterCheck = (game.businessCenterActivated === C.purpleState.didNotActivate) || (game.businessCenterActivated === C.purpleState.activated);
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRerolled || game.state === C.state.bought || game.TVStationActivated === C.purpleState.activateFinish || !businessCenterCheck || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 let doubles = false;
@@ -212,21 +221,22 @@ wss.on('connection', function (ws) {
                 }
 
                 // * * Update game state
+                let alreadyRolled = (game.state === C.state.rolled) || (game.state === C.state.rolledDoubles);
                 game.state = alreadyRolled ? (game.state = doubles ? C.state.rerolledDoubles : C.state.rerolled) : (game.state = doubles ? C.state.rolledDoubles : C.state.rolled);
                 // Checked Radio Tower above
 
                 // * * Update previous game state
                 game.previousState = undefined;
 
+                // * * Calculate everyone's income
                 game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName);
-                // TODO: Calculate everyone's income here
             }
         } else if (message.type === 'buySomething') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            // * * You are not able to buy something while TV Station is activated
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.bought || game.state === C.state.newTurn || game.state === C.state.TVStation || !validPurchase(game, playerCounter, message.shopIndex)) {
+            // * * You should be able to buy something while TV Station/Business Center is activated
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.bought || game.state === C.state.newTurn || !validPurchase(game, playerCounter, message.shopIndex)) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 game.players[playerCounter].balance -= C.buildings[message.shopIndex].cost;
@@ -258,24 +268,53 @@ wss.on('connection', function (ws) {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state !== C.state.TVStation) {
+
+            // * * Verify that message.targetIndex is a valid number
+            // TODO: Make sure the client didn't pick themselves to exchange coins with
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.TVStationActivated !== C.purpleState.activated || message.targetIndex < 1 || message.targetIndex > rooms[roomIndex].length - 1) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                // TODO: Verify that message.index is a valid number
-                let numberOfCoins = exchangeCoins(currentPlayer, game.players[message.targetIndex - 1], 5); // since i is not 0 indexed
+                let numberOfCoins = exchangeCoins(currentPlayer, game.players[message.targetIndex - 1], 5); // since targetIndex is not 0 indexed
                 purpleIncome[playerCounter] += numberOfCoins;
                 purpleIncome[message.targetIndex - 1] -= numberOfCoins; // since i is not 0 indexed
                 
-                // * * Update game state; VERY IMPORTANT: must finish the TV Station interaction before buying something
-                game.state = (game.previousState === C.state.rolled) ? C.state.rerolled : game.previousState;
-                game.state = (game.previousState === C.state.rolledDoubles) ? C.state.rerolledDoubles : game.previousState; // * * So they cannot reroll after TV Station interaction
-                game.previousState = undefined;
+                // * * Update TVStationActivated state
+                game.TVStationActivated = C.purpleState.activateFinish;
                 
+                // * * Update player balances on each client
                 let playerBalances = game.players.map(elem => elem.balance).splice(0, 1); // remove the 0th index (the game);
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
                     // * * targetIndex starts at 1
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, yourTurn: i === playerCounter + 1, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
                 }
+            }
+        } else if (message.type === 'businessActivate') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            let playerCounter = game.playerCounter;
+            // TODO: Verify that message.targetIndex is a valid number (they cannot pick themselves as well)
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.businessCenterActivated !== C.purpleState.activated) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                game.businessTargetPlayerIndex = message.targetIndex - 1; // * * targetPlayerIndex is 0 indexed
+
+                // * * Update BusinessCenterActivated state
+                game.businessCenterActivated = C.purpleState.gotPlayerIndex;
+
+                // * * Send back data to disable establishment buttons that targetPlayer doesn't have
+                ws.send(JSON.stringify({type: 'disableBusinessButtons', disabledArray: game.players[message.targetIndex - 1].establishments.map(elem => elem === 0)}));
+            }
+        } else if (message.type === 'businessReceiveIndex') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            let playerCounter = game.playerCounter;
+            // TODO: Verify that the establishment they picked is valid for the player they chose earlier
+            // TODO: Make sure targetPlayerIndex is valid before moving on (could be -1 which would crash the server) and can't pick themselves
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || !validReceiveIndex(game, message.receiveIndex) || game.businessCenterActivated !== C.purpleState.gotPlayerIndex) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                // TODO: MAKE validReceiveIndex function bro
+                game.businessReceiveIndex = message.receiveIndex;
             }
         }
     });

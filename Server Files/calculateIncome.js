@@ -72,110 +72,21 @@ export function calculateIncome(roll, game, room, WStoPlayerName) {
             // * * Send a message to each client; each player gets 4 messages at a time
             for (let i = 1; i < room.length; i++) {
                 for (let j = 1; j < room.length; j++) {
-                    if (j !== game.playerCounter + 1) {
-                        room[i].send(JSON.stringify({type: 'showStadiumText', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j] }));
-                    } else {
-                        room[i].send(JSON.stringify({type: 'stadiumTotal', index: j, receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[playerCounter]}));
-                    }
+                    room[i].send(JSON.stringify({type: (j !== game.playerCounter + 1) ? 'showStadiumText' : 'stadiumTotal', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j] }));
                 }
             }
         }
         if (currentPlayer.establishments[7]) {
-            // * * Update previous game state
-            game.previousState = game.state;
-
-            // * * Update game state
-            game.state = C.state.TVStation;
+            // * * Update TVStationActivated state
+            game.TVStationActivated = C.purpleState.activated;
 
             room[playerCounter + 1].send(JSON.stringify({type: 'showTVText', playerCounter: playerCounter}));
         }
         if (currentPlayer.establishments[8]) {
-            // * * Update previous game state
-            if (game.previousState === undefined) { // * * If both TV Station and Business Center activate
-                game.previousState = game.state;
-            }
+            // * * Update businessCenterActivated state
+            game.businessCenterActivated = C.purpleState.activated;
 
-            // * * Update game state
-            game.state
-
-            const buttonIDs = C.buildings.map(building => building.name);
-            const displayNames = C.buildings.map(building => building.displayName);
-
-            document.getElementById('endturnbutton').disabled = true;
-            document.getElementById(`businessplayer${game.playerCounter + 1}button`).disabled = true; // disable trading with yourself
-        
-            document.getElementById('businessplayerbuttons').style.display = "inline";
-            document.getElementById('businesstext1').style.display = "inline";
-            let targetPlayer = game.players[0]; // temporary value in order for button to work as intended
-            let targetPlayerIndex;
-            for (let i = 1; i <= game.players.length; i++) {
-                document.getElementById(`businessplayer${i}button`).onclick = function() {
-                    targetPlayer = game.players[i - 1];
-                    targetPlayerIndex = i - 1; //* * targetPlayerIndex is 0 indexed
-
-                    document.getElementById('businesstext1').style.display = "none";
-                    document.getElementById('businesstext2').style.display = "inline";
-                    document.getElementById('businessplayerbuttons').style.display = "none";
-
-                    document.getElementById('receiveindex').style.display = "inline";
-
-                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after choosing a player to trade with
-                }
-            }
-            
-            let receiveIndex;
-            let giveIndex;
-
-            for (let i = 0; i < 15; i++) {
-                if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
-                    document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
-                    document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
-                        receiveIndex = i;
-
-                        document.getElementById('businesstext2').style.display = "none";
-                        document.getElementById('businesstext3').style.display = "inline";
-                        document.getElementById('receiveindex').style.display = "none";
-                        document.getElementById('giveindex').style.display = "inline";
-                    }
-                }
-            }
-
-            for (let i = 0; i < 15; i++) {
-
-                if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
-                    document.getElementById(`give${buttonIDs[i]}button`).disabled = currentPlayer.establishments[i] === 0;
-                    document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
-                        giveIndex = i;
-
-                        currentPlayer.establishments[giveIndex]--; // giving away
-                        document.querySelector(`#${buttonIDs[giveIndex]}${game.playerCounter + 1}`).innerHTML = `${displayNames[giveIndex]}: ${currentPlayer.establishments[giveIndex]}`;
-                        targetPlayer.establishments[giveIndex]++;
-                        document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
-                        
-                        currentPlayer.establishments[receiveIndex]++; // receiving
-                        document.querySelector(`#${buttonIDs[receiveIndex]}${game.playerCounter + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${currentPlayer.establishments[receiveIndex]}`;
-                        targetPlayer.establishments[receiveIndex]--;
-                        document.querySelector(`#${buttonIDs[receiveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${targetPlayer.establishments[receiveIndex]}`;
-
-                        document.getElementById('businesstext3').style.display = "none";
-
-                        document.getElementById('giveindex').style.display = "none";
-
-                        // enable shop buttons
-                        document.getElementById('buysomething').style.display = "inline";
-                        enableShop(game); // TODO: change enableShop to take in one parameter game
-
-                        document.getElementById(`businessplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
-
-                        // text for what establishments were traded
-                        document.getElementById('businesstext').style.display = "inline";
-                        document.querySelector('#businesstext4').innerHTML = `Player ${game.playerCounter + 1} received ${displayNames[receiveIndex]} and lost ${displayNames[giveIndex]}.`;
-                        document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${displayNames[receiveIndex]} and received ${displayNames[giveIndex]}.`;
-
-                        document.getElementById('endturnbutton').disabled = false;
-                    }
-                }
-            }
+            room[playerCounter + 1].send(JSON.stringify({type: 'showBusinessText', playerCounter: playerCounter}));
         }
     }
     let activated_buildings;

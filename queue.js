@@ -25,9 +25,13 @@ let numberOfPlayers;
 
 // TODO: Have an action history of what happened in the bottom left or something
 
+// TODO: Do something if player disconnects while in middle of a game
+
 
 // * * GAMEPLAY STUFF
 // TODO: Make sure UI recognizes that you are not able to buy something while TV Station is activated
+
+// TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
 
 export function queue(name) {   
     playerName = name;
@@ -137,9 +141,47 @@ export function queue(name) {
             }
         }
 
+        // * * Set up TV Station player-buttons
         for (let i = 1; i <= 4; i++) {     
             document.getElementById(`tvplayer${i}button`).onclick = function() {
                 ws.send(JSON.stringify({type: 'TVActivate', roomID: currentRoomID, targetIndex: i}));
+                document.getElementById('endturnbutton').disabled = false;
+                document.getElementById('tvplayerbuttons').style.display = "none";
+                document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
+                document.getElementById('incomesummary').style.display = "inline";
+                document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins (verified on server)
+            }
+        }
+
+        // * * Set up Business Center player-buttons
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`businessplayer${i}button`).onclick = function() {
+                ws.send(JSON.stringify({type: 'businessActivate', roomID: currentRoomID, targetIndex: i}));
+
+                document.getElementById('businesstext1').style.display = "none";
+                document.getElementById('businesstext2').style.display = "inline";
+                document.getElementById('businessplayerbuttons').style.display = "none";
+
+                document.getElementById('receiveindex').style.display = "inline";
+
+                document.getElementById('rerollbutton').disabled = true; // disable rerolling after choosing a player to trade with
+            }
+        }
+
+        // * * Set up Business Center receive establishment buttons
+        for (let i = 0; i < 15; i++) {
+            if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                document.getElementById(`receive${buttonIDs[i]}button`).disabled = targetPlayer.establishments[i] === 0;
+                document.getElementById(`receive${buttonIDs[i]}button`).onclick = function() {
+                    document.querySelectorAll('.receiveEstablishment').disabled = false;
+                    
+                    ws.send(JSON.stringify({type: 'businessReceiveIndex', receiveIndex: i}));
+
+                    document.getElementById('businesstext2').style.display = "none";
+                    document.getElementById('businesstext3').style.display = "inline";
+                    document.getElementById('receiveindex').style.display = "none";
+                    document.getElementById('giveindex').style.display = "inline";
+                }
             }
         }
 
@@ -269,12 +311,59 @@ export function queue(name) {
             } else if (message.type === 'showFinishedTVText') {
                 document.querySelector('#tvplayertext').innerHTML = `<div>${message.receiverName} received ${message.amount} coins.</div> <div>Player ${message.giverName} lost ${message.amount} coins.</div>`;
                 updateBalances(message.playerBalances);
-                if (message.yourTurn) {
-                    document.getElementById('endturnbutton').disabled = false;
-                    document.getElementById('tvplayerbuttons').style.display = "none";
-                    document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
-                    document.getElementById('incomesummary').style.display = "inline";
-                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins (verified on server)
+            } else if (message.type === 'showBusinessText') {
+                document.getElementById('endturnbutton').disabled = true;
+                document.getElementById(`businessplayer${message.playerCounter + 1}button`).disabled = true; // disable trading with yourself
+            
+                document.getElementById('businessplayerbuttons').style.display = "inline";
+                document.getElementById('businesstext1').style.display = "inline";
+                // let targetPlayer = game.players[0]; // temporary value in order for button to work as intended
+                // let targetPlayerIndex;
+                
+                // TODO: You didn't finish working on this
+
+                for (let i = 0; i < 15; i++) {
+
+                    if (i !== 6 && i !== 7 && i !== 8) { // cannot trade purple establishments
+                        document.getElementById(`give${buttonIDs[i]}button`).disabled = currentPlayer.establishments[i] === 0;
+                        document.getElementById(`give${buttonIDs[i]}button`).onclick = function() {
+                            giveIndex = i;
+
+                            currentPlayer.establishments[giveIndex]--; // giving away
+                            document.querySelector(`#${buttonIDs[giveIndex]}${game.playerCounter + 1}`).innerHTML = `${displayNames[giveIndex]}: ${currentPlayer.establishments[giveIndex]}`;
+                            targetPlayer.establishments[giveIndex]++;
+                            document.querySelector(`#${buttonIDs[giveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[giveIndex]}: ${targetPlayer.establishments[giveIndex]}`;
+                            
+                            currentPlayer.establishments[receiveIndex]++; // receiving
+                            document.querySelector(`#${buttonIDs[receiveIndex]}${game.playerCounter + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${currentPlayer.establishments[receiveIndex]}`;
+                            targetPlayer.establishments[receiveIndex]--;
+                            document.querySelector(`#${buttonIDs[receiveIndex]}${targetPlayerIndex + 1}`).innerHTML = `${displayNames[receiveIndex]}: ${targetPlayer.establishments[receiveIndex]}`;
+
+                            document.getElementById('businesstext3').style.display = "none";
+
+                            document.getElementById('giveindex').style.display = "none";
+
+                            // enable shop buttons
+                            document.getElementById('buysomething').style.display = "inline";
+                            enableShop(game);
+
+                            document.getElementById(`businessplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
+
+                            // text for what establishments were traded
+                            document.getElementById('businesstext').style.display = "inline";
+                            document.querySelector('#businesstext4').innerHTML = `Player ${game.playerCounter + 1} received ${displayNames[receiveIndex]} and lost ${displayNames[giveIndex]}.`;
+                            document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${displayNames[receiveIndex]} and received ${displayNames[giveIndex]}.`;
+
+                            document.getElementById('endturnbutton').disabled = false;
+                        }
+                    }
+                }
+            } else if (message.type === 'disableBusinessButtons') {
+                const displayNames = C.buildings.map(building => building.displayName);
+                
+                // * * Disable receive establishment buttons that the other player does not have
+                for (let i = 0; i < 15; i++) {
+                    document.getElementById(`receive${displayNames[i]}button`).disabled = message.disabledArray[i];
                 }
             }
         });

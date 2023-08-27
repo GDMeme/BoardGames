@@ -26,6 +26,13 @@ export const state = {
     rolledDoubles: 2, // * * no reroll
     rerolled: 3, // * * no doubles
     rerolledDoubles: 4,
-    bought: 5,
-    TVStation: 6
+    bought: 5
+}
+
+export const purpleState = {
+    didNotActivate: 0,
+    activated: 1,
+    gotPlayerIndex: 2,
+    gotReceiveIndex: 3,
+    activateFinish: 4 // * * So that they cannot reroll if they finished a purple establishment interaction
 }
