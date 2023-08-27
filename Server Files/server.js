@@ -4,6 +4,7 @@ import { createServer } from 'https';
 
 import { Game } from './game.js';
 import { Player } from './player.js';
+import { calculateIncome } from './calculateIncome.js';
 
 import * as C from './constants.js';
 
@@ -35,7 +36,7 @@ function findRoomIndex(ID) {
 }
 
 function removePlayer(ws, roomID, playerName) {
-    // TODO: Should validate that the parameters given are correct; if not, send niceTry
+    // TODO: Should validate that the parameters given are valid; if not, send niceTry
     let roomIndex = findRoomIndex(roomID);
     WStoRoomID.delete(ws);
     let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
@@ -55,26 +56,19 @@ function verifyWebsocket(ws, roomIndex, playerCounter) {
     return ws === rooms[roomIndex][playerCounter + 1]; // 1 because 0th index is the game
 }
 
-function resetGameVariables(game) { // TODO: Remember to update this list
-    game.rolledDoubles = false;
-    game.alreadyRerolled = false;
-    game.rolled = false;
-    game.alreadyBought = false;
-}
-
 function validPurchase(game, playerCounter, shopIndex) {
     // TODO: Verify that they have not already bought that landmark
-    if (message.index < 0 || message.index > 18 || game.players[playerCounter].balance < C.buildings[shopIndex].cost) {
+    if (shopIndex < 0 || shopIndex > 18 || game.players[playerCounter].balance < C.buildings[shopIndex].cost) {
         return false;
     }
     if (maximumEstablishments(game.players, shopIndex)) {
         return false;
     }
-    if (message.index >= 6 && message.index <= 8) {
-        return game.players[playerCounter].establishments[message.index] !== 1;
+    if (shopIndex >= 6 && shopIndex <= 8) {
+        return game.players[playerCounter].establishments[shopIndex] !== 1;
     }
-    if (message.index >= 15) {
-        return game.players[playerCounter].landmarks[message.index - 15] === false;
+    if (shopIndex >= 15) {
+        return game.players[playerCounter].landmarks[shopIndex] === false;
     }
     return true;
 }
@@ -85,6 +79,12 @@ function maximumEstablishments(players, index) {
         sum += players[i].establishments[index];
     }
     return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
+}
+
+function sendWebsocketEveryone(roomIndex, messageObj) { // TODO: Use this
+    for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
+        rooms[roomIndex][i].send(JSON.stringify(messageObj));
+    }
 }
 
 // TODO: Can't join a full room (4 players)
@@ -123,7 +123,7 @@ wss.on('connection', function (ws) {
             rooms[roomIndex].push(ws);
             ws.send(JSON.stringify({type: 'addYourself', name: message.name, hostName: WStoPlayerName.get(rooms[roomIndex][1])}));
         } else if (message.type === "removePlayer") {
-            // Server doesn't need to validate, since 'ws' only refers to the client who sent the message; worst case they remove themselves
+            // * * Server doesn't need to validate, since 'ws' only refers to the client who sent the message; worst case they remove themselves
             if (message.roomID !== -1) { // do nothing if they're not in a room
                 removePlayer(ws, message.roomID, message.name); // * * Server needs to validate this though
             }
@@ -137,7 +137,9 @@ wss.on('connection', function (ws) {
             roomIDCounter++;
         } else if (message.type === "startGame") {
             let roomIndex = findRoomIndex(message.roomID);
-            if (rooms[roomIndex][1] === ws) { // 1 because ignore the first element (verify that they are the host)
+            if (rooms[roomIndex][1].length === 2 || rooms[roomIndex][1] !== ws) { // 1 because ignore the first element (verify that they are the host)
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
                 let numberOfPlayers = rooms[roomIndex].length - 1; // 1 because ignore the first element
                 rooms[roomIndex][0].numberOfPlayers = numberOfPlayers; // * * Do I need this value? Maybe just for convenience
                 rooms[roomIndex][0].players = Array(numberOfPlayers);
@@ -147,8 +149,6 @@ wss.on('connection', function (ws) {
                 for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
                     ws.send(JSON.stringify({type: 'startGame', startingPlayer: i === 1}));
                 }
-            } else {
-                ws.send(JSON.stringify({type: 'niceTry'}));
             }
         } else if (message.type === 'kickPlayer') {
             let roomIndex = findRoomIndex(message.roomID);
@@ -165,57 +165,116 @@ wss.on('connection', function (ws) {
             let roomIndex = findRoomIndex(roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            if (verifyWebsocket(ws, roomIndex, playerCounter) && game.rolled === true) { // Must roll before ending turn
-                if (!game.rolledDoubles && !game.alreadyRerolled) { // Amusement Park did not activate
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || game.state === C.state.TVStation) { // any other state is OK
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                // * * Update playerCounter (if applicable)
+                if (!(game.state === C.state.rolledDoubles || game.state === C.state.rerolledDoubles)) { // Amusement Park did not activate
                     game.playerCounter++;
-                } // otherwise, don't increment playerCounter
+                }
                 if (game.playerCounter === game.numberOfPlayers) {
                     game.playerCounter = 0;
                 }
-                resetGameVariables(game);
-                rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn'})); // tell the next player it's their turn
-            } else {
-                ws.send(JSON.stringify({type: 'niceTry'}));
+
+                // * * Update the game state
+                game.state = C.state.newTurn;
+
+                // * * Reset income for next turn
+                game.income = undefined;
+
+                // * * Tell the next player it's their turn
+                rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn'}));
             }
         } else if (message.type === 'rollDice') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            // Verify they have not already rolled/Radio Tower stuff
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.alreadyRerolled || (game.rolled && !game.players[playerCounter].landmarks[3])) {
+
+            // * * Verify they have not already rolled/Radio Tower stuff
+            let alreadyRolled = (game.state === C.state.rerolled) || (game.state === C.state.rerolledDoubles);
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRolled || game.state === C.state.bought || game.state === C.state.TVStation || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                if (game.rolled) { // Don't need to check Radio Tower since it was checked above
-                    // TODO: Subtract everyone's income here
+                let doubles = false;
+                let roll = Math.floor(Math.random() * 6 + 1);
+
+                // * * Roll two dice
+                if (message.rollTwoDice && game.players[playerCounter].landmarks[0]) {
+                    let secondRoll = Math.floor(Math.random() * 6 + 1);
+                    if (roll === secondRoll) {
+                        doubles = true;
+                    }
+                    roll += secondRoll;
                 }
-                let roll = Math.floor(Math.random() * 6 + 1) + (message.rollTwoDice && game.players[playerCounter].landmarks[0]) ? Math.floor(Math.random() * 6 + 1) : 0;
+                
                 for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
                     rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1}));
                 }
-                game.rolled = true;
+
+                // * * Update game state
+                game.state = alreadyRolled ? (game.state = doubles ? C.state.rerolledDoubles : C.state.rerolled) : (game.state = doubles ? C.state.rolledDoubles : C.state.rolled);
+                // Checked Radio Tower above
+
+                // * * Update previous game state
+                game.previousState = undefined;
+
+                game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName);
                 // TODO: Calculate everyone's income here
             }
         } else if (message.type === 'buySomething') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.alreadyBought || !validPurchase(game, playerCounter, message.shopIndex)) {
+            // * * You are not able to buy something while TV Station is activated
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.bought || game.state === C.state.newTurn || game.state === C.state.TVStation || !validPurchase(game, playerCounter, message.shopIndex)) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 game.players[playerCounter].balance -= C.buildings[message.shopIndex].cost;
+
+                // * * Update game state
+                game.state = C.state.bought;
+
+                // * * Update previous game state
+                game.previousState = undefined;
+
                 if (message.index < 15) {
                     game.players[playerCounter].establishments[message.shopIndex]++;
+                    for (let i = 1; i < rooms[roomIndex].length; i++) {
+                        rooms[roomIndex][i].send(JSON.stringify({type: 'boughtEstablishment', shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]}));
+                    }
                 } else {
                     game.players[playerCounter].landmarks[message.shopIndex - 15] = true;
                     if (game.players[playerCounter].landmarks.every(v => v === true)) { // Player wins!
                         // TODO: Make the end screen 
                     } else { // Game continues
-                        game.alreadyBought = true;
                         // TODO: Make this into a function 'sendWebsocketEveryone' or something
                         for (let i = 1; i < rooms[roomIndex].length; i++) {
-                            rooms[roomIndex][i].send(JSON.stringify({type: 'boughtSomething', shopIndex: message.shopIndex, playerCounter: playerCounter}));
+                            rooms[roomIndex][i].send(JSON.stringify({type: 'boughtLandmark', shopIndex: message.shopIndex, playerCounter: playerCounter}));
                         }
                     }
+                }
+            }
+        } else if (message.type === 'TVActivate') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            let playerCounter = game.playerCounter;
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state !== C.state.TVStation) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                // TODO: Verify that message.index is a valid number
+                let numberOfCoins = exchangeCoins(currentPlayer, game.players[message.targetIndex - 1], 5); // since i is not 0 indexed
+                purpleIncome[playerCounter] += numberOfCoins;
+                purpleIncome[message.targetIndex - 1] -= numberOfCoins; // since i is not 0 indexed
+                
+                // * * Update game state; VERY IMPORTANT: must finish the TV Station interaction before buying something
+                game.state = (game.previousState === C.state.rolled) ? C.state.rerolled : game.previousState;
+                game.state = (game.previousState === C.state.rolledDoubles) ? C.state.rerolledDoubles : game.previousState; // * * So they cannot reroll after TV Station interaction
+                game.previousState = undefined;
+                
+                let playerBalances = game.players.map(elem => elem.balance).splice(0, 1); // remove the 0th index (the game);
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    // * * targetIndex starts at 1
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, yourTurn: i === playerCounter + 1, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
                 }
             }
         }

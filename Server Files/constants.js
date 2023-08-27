@@ -19,3 +19,13 @@ export const buildings = [
     {name: 'amusementpark', displayName: 'Amusement Park', cost: 16},
     {name: 'radiotower', displayName: 'Radio Tower', cost: 22}
 ];
+
+export const state = {
+    newTurn: 0,
+    rolled: 1,
+    rolledDoubles: 2, // * * no reroll
+    rerolled: 3, // * * no doubles
+    rerolledDoubles: 4,
+    bought: 5,
+    TVStation: 6
+}

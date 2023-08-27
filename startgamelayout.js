@@ -4,7 +4,7 @@ import { buy } from './shop.js';
 
 import { playerTurnLayout } from './playerturnlayout.js';
 
-import { updateBalances, updateEstablishmentsLandmarks } from './income.js';
+import { updateBalances, updateEstablishmentsLandmarks } from './Server Files/calculateIncome.js';
 
 import { endTurn } from './endturn.js';
 

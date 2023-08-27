@@ -1,4 +1,4 @@
-import { enableShop } from './shop.js';
+import { enableShop } from '../shop.js';
 
 import * as C from './constants.js'
 
@@ -40,12 +40,6 @@ function exchangeCoins(player, targetPlayer, amount) { // returns the positive a
     }
 }
 
-export function updateBalances(players) { // fine to send players since only reading, not writing
-    for (let i = 0; i < players.length; i++) {
-        document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${players[i].balance}</font>`;
-    }
-}
-
 export function updateEstablishmentsLandmarks(game) {
     for (let i = 0; i < game.players.length; i++) {
         for (let j = 0; j < 15; j++) {
@@ -57,53 +51,53 @@ export function updateEstablishmentsLandmarks(game) {
     }
 }
 
-export function income(roll, game) {
+export function calculateIncome(roll, game, room, WStoPlayerName) {
     let redIncome = Array(game.players.length).fill(0);
     let greenBlueIncome = Array(game.players.length).fill(0);
     let purpleIncome = Array(game.players.length).fill(0);
+    let playerCounter = game.playerCounter;
+    let players = game.players;
     if (roll === 3 || roll === 10) {
         redIncome = redActivate(game, roll === 3, redIncome);
-    } else if (roll === 6) { // shouldn't make a difference if purple goes before green/blue
-        let currentPlayer = game.players[game.playerCounter];
+    } else if (roll === 6) { // TODO: IT MAKES A DIFFERENCE IF PURPLE GOES BEFORE GREEN/BLUE (only stadium is affected)
+        let currentPlayer = players[playerCounter];
         if (currentPlayer.establishments[6]) { 
-            for (let i = 0; i < game.players.length; i++) {
-                if (i !== game.playerCounter) {  
-                    purpleIncome[i] = exchangeCoins(currentPlayer, game.players[i], 2);
-                    document.getElementById(`stadiumtext${i + 1}`).style.display = "inline";
-                    document.querySelector(`#stadiumtext${i + 1}`).innerHTML = `<div>Player ${i + 1} gave ${purpleIncome[i]} coins to Player ${playerCounter + 1}.</div>`;
+            for (let i = 0; i < players.length; i++) {
+                if (i !== playerCounter) {  
+                    purpleIncome[i] = exchangeCoins(currentPlayer, players[i], 2);
                 }
             }
-            purpleIncome[game.playerCounter] = purpleIncome.reduce((total, item) => total + item);
+            purpleIncome[playerCounter] = purpleIncome.reduce((total, item) => total + item);
 
-            document.getElementById(`stadiumtext${game.playerCounter + 1}`).style.display = "inline";
-            document.querySelector(`#stadiumtext${game.playerCounter + 1}`).innerHTML = `<div>Player ${game.playerCounter + 1} received ${purpleIncome[game.playerCounter]} coins from Stadium.</div>`;
+            // * * Send a message to each client; each player gets 4 messages at a time
+            for (let i = 1; i < room.length; i++) {
+                for (let j = 1; j < room.length; j++) {
+                    if (j !== game.playerCounter + 1) {
+                        room[i].send(JSON.stringify({type: 'showStadiumText', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j] }));
+                    } else {
+                        room[i].send(JSON.stringify({type: 'stadiumTotal', index: j, receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[playerCounter]}));
+                    }
+                }
+            }
         }
         if (currentPlayer.establishments[7]) {
-            document.getElementById('tvplayertextbuttons').style.display = "inline";
-            document.getElementById('tvplayerbuttons').style.display = "inline";
-            document.querySelector('#tvplayertext').innerHTML = "Who would you like to take 5 coins from?";
-            document.getElementById('endturnbutton').disabled = true;
-            document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
+            // * * Update previous game state
+            game.previousState = game.state;
 
-            for (let i = 1; i <= game.players.length; i++) {     
-                document.getElementById(`tvplayer${i}button`).onclick = function() {
-                    let numberOfCoins = exchangeCoins(currentPlayer, game.players[i - 1], 5); // since i is not 0 indexed
-                    document.querySelector('#tvplayertext').innerHTML = `<div>Player ${game.playerCounter + 1} received ${numberOfCoins} coins.</div> <div>Player ${i} lost ${numberOfCoins} coins.</div>`;
-                    updateBalances(game.players);
-                    purpleIncome[game.playerCounter] += numberOfCoins;
-                    purpleIncome[i - 1] -= numberOfCoins; // since i is not 0 indexed
+            // * * Update game state
+            game.state = C.state.TVStation;
 
-                    document.getElementById('endturnbutton').disabled = false;
-                    document.getElementById('tvplayerbuttons').style.display = "none";
-                    document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
-
-                    document.getElementById('incomesummary').style.display = "inline";
-                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins
-                }
-            }
-
+            room[playerCounter + 1].send(JSON.stringify({type: 'showTVText', playerCounter: playerCounter}));
         }
         if (currentPlayer.establishments[8]) {
+            // * * Update previous game state
+            if (game.previousState === undefined) { // * * If both TV Station and Business Center activate
+                game.previousState = game.state;
+            }
+
+            // * * Update game state
+            game.state
+
             const buttonIDs = C.buildings.map(building => building.name);
             const displayNames = C.buildings.map(building => building.displayName);
 

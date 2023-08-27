@@ -8,6 +8,7 @@ let currentRoomID = -1;
 let host = false;
 let playerName; // need this in case they have to reconnect
 let ws;
+let numberOfPlayers;
 
 // TODO: Show when someone is typing?
 
@@ -24,10 +25,9 @@ let ws;
 
 // TODO: Have an action history of what happened in the bottom left or something
 
-function sendMessage(message) {
-    document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;
-    document.getElementById('chathistory').scrollTop = document.getElementById('chathistory').scrollHeight;
-}
+
+// * * GAMEPLAY STUFF
+// TODO: Make sure UI recognizes that you are not able to buy something while TV Station is activated
 
 export function queue(name) {   
     playerName = name;
@@ -98,7 +98,6 @@ export function queue(name) {
             while (document.getElementById('playerlist').children.length > 1) {
                 document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].children[0]?.remove();
                 document.getElementById('playerlist').children[document.getElementById('playerlist').children.length - 1].remove();
-
             }
             for (const child of document.getElementById('availablerooms').children) {
                 child.remove();
@@ -135,7 +134,12 @@ export function queue(name) {
             const id = buttonIDs[i];
             document.getElementById(`buy${id}button`).onclick = function() {
                 ws.send(JSON.stringify({type: 'buySomething', roomID: currentRoomID, shopIndex: i}));
-                // buy(i, game);
+            }
+        }
+
+        for (let i = 1; i <= 4; i++) {     
+            document.getElementById(`tvplayer${i}button`).onclick = function() {
+                ws.send(JSON.stringify({type: 'TVActivate', roomID: currentRoomID, targetIndex: i}));
             }
         }
 
@@ -224,7 +228,8 @@ export function queue(name) {
             } else if (message.type === 'goBack') {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
-                startGameLayout(document.getElementById('playerlist').children.length - 1, ws, currentRoomID); // 1 because it has an extra child
+                numberOfPlayers = document.getElementById('playerlist').children.length - 1;
+                startGameLayout(numberOfPlayers, ws, currentRoomID); // 1 because it has an extra child
                 document.getElementById('playerturntext').style.display = "block";
                 if (message.startingPlayer) {
                     playerTurnLayout();
@@ -243,8 +248,34 @@ export function queue(name) {
                     document.getElementById('roll2dicecheckbox').disabled = !(notReroll && currentPlayer.landmarks[3] && currentPlayer.landmarks[0]); // able to roll two dice if rerolling, radio tower and train station
                     document.getElementById('rerollbutton').disabled = !(currentPlayer.landmarks[3] && notReroll);
                 }
-            } else if (message.type === 'boughtSomething') {
-                // message.shopIndex, message.playerCounter
+            } else if (message.type === 'boughtEstablishment') {
+                const { name, displayName } = C.buildings[message.shopIndex];
+                document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${currentPlayer.establishments[building_num]}`;
+            } else if (message.type === 'boughtLandmark') {
+                const { name, displayName } = C.buildings[message.shopIndex];
+                document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: Unlocked`;
+            } else if (message.type === 'showStadiumText') {
+                document.getElementById(`stadiumtext${message.index}`).style.display = "block";
+                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `${message.giverName} gave ${message.amount} coins to Player ${message.receiverName}.`;
+            } else if (message.type === 'stadiumTotal') {
+                document.getElementById(`stadiumtext${message.index}`).style.display = "inline";
+                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `Player ${message.receiverName} received ${message.amount} coins from Stadium.`;
+            } else if (message.type === 'showTVText') { 
+                document.getElementById('tvplayertextbuttons').style.display = "inline";
+                document.getElementById('tvplayerbuttons').style.display = "inline";
+                document.querySelector('#tvplayertext').innerHTML = "<u>Who would you like to take 5 coins from?</u>";
+                document.getElementById('endturnbutton').disabled = true;
+                document.getElementById(`tvplayer${message.playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
+            } else if (message.type === 'showFinishedTVText') {
+                document.querySelector('#tvplayertext').innerHTML = `<div>${message.receiverName} received ${message.amount} coins.</div> <div>Player ${message.giverName} lost ${message.amount} coins.</div>`;
+                updateBalances(message.playerBalances);
+                if (message.yourTurn) {
+                    document.getElementById('endturnbutton').disabled = false;
+                    document.getElementById('tvplayerbuttons').style.display = "none";
+                    document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
+                    document.getElementById('incomesummary').style.display = "inline";
+                    document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins (verified on server)
+                }
             }
         });
 
@@ -253,7 +284,7 @@ export function queue(name) {
     });
 };
 
-function addNewPlayer(name, bold) { // flag true means don't add kick button
+function addNewPlayer(name, bold) {
     let newPlayer = document.createElement('li');
     newPlayer.innerHTML = name + (document.getElementById('playerlist').children.length === 1 ? ' (Host)' : '');
     newPlayer.style.fontWeight = bold ? 'bold' : 'normal';
@@ -281,6 +312,17 @@ function removeKickButtons() {
     for (let i = 2; i < document.getElementById('playerlist').children.length; i++) {
         document.getElementById('playerlist').children[i].children[0]?.remove();
        
+    }
+}
+
+function sendMessage(message) {
+    document.querySelector('#chathistory').innerHTML += `${document.getElementById('chathistory').value === '' ? '' : '\n'}${message}`;
+    document.getElementById('chathistory').scrollTop = document.getElementById('chathistory').scrollHeight;
+}
+
+function updateBalances(playerBalances) {
+    for (let i = 0; i < numberOfPlayers; i++) {
+        document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${playerBalances[i]}</font>`;
     }
 }
 

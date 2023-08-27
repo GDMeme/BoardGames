@@ -4,10 +4,8 @@ export class Game {
         this.playerCounter = 0; // * * playerCounter is 0 indexed!!
         let ID, name, numberOfPlayers;
 
-        // These variables refresh every turn
-        let rolledDoubles = false;
-        let alreadyRerolled = false;
-        let rolled = false;
-        let alreadyBought = false;
+        let state = 0;
+        let previousState; // If TV Station or Business Center activate, need to keep track of the previous state
+        let income;
     }
 }

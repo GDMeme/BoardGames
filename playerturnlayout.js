@@ -1,4 +1,4 @@
-import { income } from './income.js';
+import { income } from './Server Files/calculateIncome.js';
 
 import { enableShop } from './shop.js'
 
