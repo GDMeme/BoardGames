@@ -369,6 +369,18 @@ export function queue(name) {
 
                     document.getElementById('endturnbutton').disabled = false;
                 }
+            } else if (message.type === 'updateBalances') {
+                document.querySelector(`#balance${message.playerIndex + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
+            } else if (message.type === 'showRedIncome') {
+                for (let i = 0; i < game.players.length; i++) {
+                    document.getElementById(`redincome${i + 1}`).style.display = message.redIncome[i] === 0 ? "none" : "flex";
+                    document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${message.redIncome[i] > 0 ? 'received' : 'lost'} ${message.redIncome[i] > 0 ? message.redIncome[i] : -message.redIncome[i]} ${(message.redIncome[i] > 1 || message.redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
+                }
+            } else if (message.type === 'showGreenBlueIncome') {      
+                for (let i = 0; i < game.players.length; i++) {
+                    document.getElementById(`greenblueincome${i + 1}`).style.display = message.greenBlueIncome[i] === 0 ? "none" : "flex";
+                    document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${message.greenBlueIncome[i]} ${(message.greenBlueIncome[i] > 1 || message.greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
+                }
             }
         });
 

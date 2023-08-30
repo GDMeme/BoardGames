@@ -1,6 +1,8 @@
 import { enableShop } from '../shop.js';
 
-import * as C from './constants.js'
+import * as C from './constants.js';
+
+import { sendWebsocketEveryone } from './server.js';
 
 function redActivate(game, flag, redIncome) { // if flag, rolled 3
     let index = game.playerCounter; // * * index is 0 indexed!!
@@ -51,7 +53,7 @@ export function updateEstablishmentsLandmarks(game) {
     }
 }
 
-export function calculateIncome(roll, game, room, WStoPlayerName) {
+export function calculateIncome(roll, game, room, WStoPlayerName, roomIndex) { // roomIndex is needed for sendWebsocketEveryone
     let redIncome = Array(game.players.length).fill(0);
     let greenBlueIncome = Array(game.players.length).fill(0);
     let purpleIncome = Array(game.players.length).fill(0);
@@ -72,7 +74,7 @@ export function calculateIncome(roll, game, room, WStoPlayerName) {
             // * * Send a message to each client; each player gets 4 messages at a time
             for (let i = 1; i < room.length; i++) {
                 for (let j = 1; j < room.length; j++) {
-                    room[i].send(JSON.stringify({type: (j !== game.playerCounter + 1) ? 'showStadiumText' : 'stadiumTotal', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j] }));
+                    room[i].send(JSON.stringify({type: (j !== game.playerCounter + 1) ? 'showStadiumText' : 'stadiumTotal', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j]}));
                 }
             }
         }
@@ -101,7 +103,8 @@ export function calculateIncome(roll, game, room, WStoPlayerName) {
         }
         let currentIncome = 0;
         for (const buildingIndex of activated_buildings) {
-            if (Array.isArray(C.buildings[buildingIndex].income)) { // shopping mall doesn't apply here
+            // * * Establishments that have a multiplier effect
+            if (Array.isArray(C.buildings[buildingIndex].income)) { // shopping mall will never apply here
                 let numberOfSpecial = 0;
                 for (const incomeIndex of C.buildings[buildingIndex].income) {
                     numberOfSpecial += player.establishments[incomeIndex];
@@ -114,35 +117,33 @@ export function calculateIncome(roll, game, room, WStoPlayerName) {
                     const buildingIncome = player.establishments[buildingIndex] * (C.buildings[buildingIndex].income + 1);
                     currentIncome += buildingIncome
                     player.balance += buildingIncome;
-                } else {
+                } else { // no shopping mall
                     const buildingIncome = player.establishments[buildingIndex] * C.buildings[buildingIndex].income;
                     currentIncome += buildingIncome;
                     player.balance += buildingIncome;
                 }
             }
         }
-        document.querySelector(`#balance${playerCycleIndex + 1}`).innerHTML = `<font size="5">Balance: ${player.balance}</font>`;
+        // * * Update balance for each client's HTML 
+        sendWebsocketEveryone(roomIndex, {type: 'updateBalances', playerIndex: playerCycleIndex, newBalance: player.balance});
+
         greenBlueIncome[playerCycleIndex] = currentIncome;
         playerCycleIndex++;
     }
 
     // red income text
     if (!redIncome.every(income => income === 0)) {
-        for (let i = 0; i < game.players.length; i++) {
-            document.getElementById(`redincome${i + 1}`).style.display = redIncome[i] === 0 ? "none" : "flex";
-            document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${redIncome[i] > 0 ? 'received' : 'lost'} ${redIncome[i] > 0 ? redIncome[i] : -redIncome[i]} ${(redIncome[i] > 1 || redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
-        }
+        // * * Show red income text for each client's HTML
+        sendWebsocketEveryone(roomIndex, {type: 'showRedIncome', redIncome: redIncome});
     }
 
     // green/blue income text
     if (!greenBlueIncome.every(income => income === 0)) {
-        for (let i = 0; i < game.players.length; i++) {
-            document.getElementById(`greenblueincome${i + 1}`).style.display = greenBlueIncome[i] === 0 ? "none" : "flex";
-            document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${greenBlueIncome[i]} ${(greenBlueIncome[i] > 1 || greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
-        }
+        // * * Show green/blue income text for each client's HTML
+        sendWebsocketEveryone(roomIndex, {type: 'showGreenBlueIncome', greenBlueIncome: greenBlueIncome});
     }
     
-    let totalIncome = Array(game.players.length).fill(0);
+    let totalIncome = Array(game.players.length);
     for (let i = 0; i < game.players.length; i++) {
         totalIncome[i] = purpleIncome[i] + redIncome[i] + greenBlueIncome[i];
     }

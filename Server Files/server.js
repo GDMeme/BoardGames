@@ -242,11 +242,8 @@ wss.on('connection', function (ws) {
                 game.state = alreadyRolled ? (game.state = doubles ? C.state.rerolledDoubles : C.state.rerolled) : (game.state = doubles ? C.state.rolledDoubles : C.state.rolled);
                 // Checked Radio Tower above
 
-                // * * Update previous game state
-                game.previousState = undefined;
-
                 // * * Calculate everyone's income
-                game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName);
+                game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName, roomIndex);
             }
         } else if (message.type === 'buySomething') {
             let roomIndex = findRoomIndex(message.roomID);
@@ -260,9 +257,6 @@ wss.on('connection', function (ws) {
 
                 // * * Update game state
                 game.state = C.state.bought;
-
-                // * * Update previous game state
-                game.previousState = undefined;
 
                 if (message.index < 15) {
                     game.players[playerCounter].establishments[message.shopIndex]++;
