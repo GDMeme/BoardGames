@@ -78,13 +78,13 @@ export function calculateIncome(roll, game, room, WStoPlayerName) {
         }
         if (currentPlayer.establishments[7]) {
             // * * Update TVStationActivated state
-            game.TVStationActivated = C.purpleState.activated;
+            game.TVStationActivatedState = C.purpleState.activated;
 
             room[playerCounter + 1].send(JSON.stringify({type: 'showTVText', playerCounter: playerCounter}));
         }
         if (currentPlayer.establishments[8]) {
             // * * Update businessCenterActivated state
-            game.businessCenterActivated = C.purpleState.activated;
+            game.businessCenterActivatedState = C.purpleState.activated;
 
             room[playerCounter + 1].send(JSON.stringify({type: 'showBusinessText', playerCounter: playerCounter}));
         }

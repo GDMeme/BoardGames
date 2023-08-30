@@ -36,7 +36,7 @@ function findRoomIndex(ID) {
 }
 
 function removePlayer(ws, roomID, playerName) {
-    // TODO: Should validate that the parameters given are valid; if not, send niceTry
+    // TODO: Validate that the parameters given are valid; if not, send niceTry
     let roomIndex = findRoomIndex(roomID);
     WStoRoomID.delete(ws);
     let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
@@ -81,10 +81,19 @@ function maximumEstablishments(players, index) {
     return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
 }
 
-function sendWebsocketEveryone(roomIndex, messageObj) { // TODO: Use this
-    for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
+function sendWebsocketEveryone(roomIndex, messageObj) {
+    for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element (the game)
         rooms[roomIndex][i].send(JSON.stringify(messageObj));
     }
+}
+
+function validReceiveIndex(game, receiveIndex) {
+    let targetPlayerIndex = game.businessTargetPlayerIndex;
+    return !(targetPlayerIndex === -1 || game.players[targetPlayerIndex].establishments[receiveIndex] === 0 || targetPlayerIndex === playerCounter);
+}
+
+function validGiveIndex(game, giveIndex) {
+    return game.players[playerCounter].establishments[giveIndex] !== 0;
 }
 
 // TODO: Can't join a full room (4 players)
@@ -104,37 +113,46 @@ wss.on('connection', function (ws) {
             WStoPlayerName.set(ws, message.name);
         } else if (message.type === 'message') {
             let roomIndex = findRoomIndex(message.roomID);
-            for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
-                // TODO: Server should verify that they are in that room
-                rooms[roomIndex][i].send(JSON.stringify({type: 'message', message: message.message, name: message.name}));
+            if (!rooms[roomIndex].includes(ws)) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                sendWebsocketEveryone(roomIndex, {type: 'message', message: message.message, name: WStoPlayerName.get(ws)})
             }
         } else if (message.type === 'requestRooms') {
             ws.send(JSON.stringify({type: 'sendRooms', rooms: rooms}));
         } else if (message.type === 'joinedRoom') {
-            // TODO: Server should verify that they are not in another room before joining this one
-            let roomIndex = findRoomIndex(message.roomID);
-            WStoRoomID.set(ws, message.roomID);
-            for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
-                // send message to original person as well
-                // index includes all players (including host)
-                rooms[roomIndex][i].send(JSON.stringify({type: 'playerJoined', newName: message.name, index: rooms[roomIndex].length - 2})); 
-                ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i]), index: rooms[roomIndex].length - 2}));
+            // * * Check if they are in another room
+            if (WStoRoomID.get(ws) !== undefined) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                let roomIndex = findRoomIndex(message.roomID);
+                WStoRoomID.set(ws, message.roomID);
+                for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
+                    // send message to original person as well
+                    // index includes all players (including host)
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'playerJoined', newName: message.name, index: rooms[roomIndex].length - 2})); 
+                    ws.send(JSON.stringify({type: 'addPlayer', name: WStoPlayerName.get(rooms[roomIndex][i]), index: rooms[roomIndex].length - 2}));
+                }
+                rooms[roomIndex].push(ws);
+                ws.send(JSON.stringify({type: 'addYourself', name: message.name, hostName: WStoPlayerName.get(rooms[roomIndex][1])}));
             }
-            rooms[roomIndex].push(ws);
-            ws.send(JSON.stringify({type: 'addYourself', name: message.name, hostName: WStoPlayerName.get(rooms[roomIndex][1])}));
         } else if (message.type === "removePlayer") {
             // * * Server doesn't need to validate, since 'ws' only refers to the client who sent the message; worst case they remove themselves
             if (message.roomID !== -1) { // do nothing if they're not in a room
                 removePlayer(ws, message.roomID, message.name); // * * Server needs to validate this though
             }
         } else if (message.type === "createRoom") {
-            // TODO: Server should validate that they are not in another room before creating a new room
-            rooms.push([new Game(), ws]);
-            rooms[rooms.length - 1][0].ID = roomIDCounter;
-            rooms[rooms.length - 1][0].name = message.roomName;
-            ws.send(JSON.stringify({type: 'ID', ID: roomIDCounter}));
-            WStoRoomID.set(ws, roomIDCounter);
-            roomIDCounter++;
+            // * * Check if they are in another room
+            if (WStoRoomID.get(ws) !== undefined) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                rooms.push([new Game(), ws]);
+                rooms[rooms.length - 1][0].ID = roomIDCounter;
+                rooms[rooms.length - 1][0].name = message.roomName;
+                ws.send(JSON.stringify({type: 'ID', ID: roomIDCounter}));
+                WStoRoomID.set(ws, roomIDCounter);
+                roomIDCounter++;
+            }
         } else if (message.type === "startGame") {
             let roomIndex = findRoomIndex(message.roomID);
             if (rooms[roomIndex][1].length === 2 || rooms[roomIndex][1] !== ws) { // 1 because ignore the first element (verify that they are the host)
@@ -146,9 +164,7 @@ wss.on('connection', function (ws) {
                 for (let i = 0; i < numberOfPlayers; i++) {
                     rooms[roomIndex][0].players[i] = new Player(WStoPlayerName.get(rooms[roomIndex][i + 1]));
                 }
-                for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
-                    ws.send(JSON.stringify({type: 'startGame', startingPlayer: i === 1}));
-                }
+                sendWebsocketEveryone(roomIndex, {type: 'startGame', startingPlayer: i === 1});
             }
         } else if (message.type === 'kickPlayer') {
             let roomIndex = findRoomIndex(message.roomID);
@@ -157,16 +173,14 @@ wss.on('connection', function (ws) {
             } else {
                 // they are removed from rooms when removePlayer is received
                 rooms[roomIndex][message.indexToKick + 2].send(JSON.stringify({type: 'kickedPlayer'})); // add 2 because ignore the first element and the host spot
-                for (let i = 1; i < rooms[roomIndex].length; i++) {
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2}));
-                }
+                sendWebsocketEveryone(roomIndex, {type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2});
             }
         } else if (message.type === 'endTurn') {
             let roomIndex = findRoomIndex(roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            let TVStationCheck = (game.TVStationActivated === C.purpleState.activateFinish) || (game.TVStationActivated === C.purpleState.didNotActivate);
-            let businessCenterCheck = (game.businessCenterActivated === C.purpleState.activateFinish) || (game.TVStationActivated === C.purpleState.didNotActivate);
+            let TVStationCheck = (game.TVStationActivatedState === C.purpleState.activateFinish) || (game.TVStationActivatedState === C.purpleState.didNotActivate);
+            let businessCenterCheck = (game.businessCenterActivatedState === C.purpleState.activateFinish) || (game.TVStationActivatedState === C.purpleState.didNotActivate);
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || !TVStationCheck || !businessCenterCheck) { // any other state is OK
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
@@ -182,13 +196,17 @@ wss.on('connection', function (ws) {
                 game.state = C.state.newTurn;
 
                 // * * Reset the purple establishment states
-                game.TVStationActivated = C.purpleState.didNotActivate;
-                game.businessCenterActivated = C.purpleState.didNotActivate;
+                game.TVStationActivatedState = C.purpleState.didNotActivate;
+                game.businessCenterActivatedState = C.purpleState.didNotActivate;
                 game.businessTargetPlayerIndex = -1;
                 game.businessReceiveIndex = -1;
 
                 // * * Reset income for next turn
                 game.income = undefined;
+
+                // TODO: When it's the next player's turn, send a message to everyone to update this innerHTML and style display
+                document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
+                document.getElementById('rolldicetext').style.display = "none";
 
                 // * * Tell the next player it's their turn
                 rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn'}));
@@ -200,8 +218,8 @@ wss.on('connection', function (ws) {
 
             // * * Verify they have not already rolled/Radio Tower stuff
             let alreadyRerolled = (game.state === C.state.rerolled) || (game.state === C.state.rerolledDoubles);
-            let businessCenterCheck = (game.businessCenterActivated === C.purpleState.didNotActivate) || (game.businessCenterActivated === C.purpleState.activated);
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRerolled || game.state === C.state.bought || game.TVStationActivated === C.purpleState.activateFinish || !businessCenterCheck || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
+            let businessCenterCheck = (game.businessCenterActivatedState === C.purpleState.didNotActivate) || (game.businessCenterActivatedState === C.purpleState.activated);
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRerolled || game.state === C.state.bought || game.TVStationActivatedState === C.purpleState.activateFinish || !businessCenterCheck || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 let doubles = false;
@@ -216,9 +234,8 @@ wss.on('connection', function (ws) {
                     roll += secondRoll;
                 }
                 
-                for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1}));
-                }
+                // * * Update every client's HTML
+                sendWebsocketEveryone(roomIndex, {type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1});
 
                 // * * Update game state
                 let alreadyRolled = (game.state === C.state.rolled) || (game.state === C.state.rolledDoubles);
@@ -249,18 +266,14 @@ wss.on('connection', function (ws) {
 
                 if (message.index < 15) {
                     game.players[playerCounter].establishments[message.shopIndex]++;
-                    for (let i = 1; i < rooms[roomIndex].length; i++) {
-                        rooms[roomIndex][i].send(JSON.stringify({type: 'boughtEstablishment', shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]}));
-                    }
+                    sendWebsocketEveryone(roomIndex, {type: 'boughtEstablishment', shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]});
                 } else {
-                    game.players[playerCounter].landmarks[message.shopIndex - 15] = true;
+                    game.players[playerCounter].landmarks[message.shopIndex - 15] = true; 
+                    // TODO: Maybe a message saying that they bought a landmark even though the won?
                     if (game.players[playerCounter].landmarks.every(v => v === true)) { // Player wins!
                         // TODO: Make the end screen 
                     } else { // Game continues
-                        // TODO: Make this into a function 'sendWebsocketEveryone' or something
-                        for (let i = 1; i < rooms[roomIndex].length; i++) {
-                            rooms[roomIndex][i].send(JSON.stringify({type: 'boughtLandmark', shopIndex: message.shopIndex, playerCounter: playerCounter}));
-                        }
+                        sendWebsocketEveryone(roomIndex, {type: 'boughtLandmark', shopIndex: message.shopIndex, playerCounter: playerCounter})
                     }
                 }
             }
@@ -271,7 +284,7 @@ wss.on('connection', function (ws) {
 
             // * * Verify that message.targetIndex is a valid number
             // TODO: Make sure the client didn't pick themselves to exchange coins with
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.TVStationActivated !== C.purpleState.activated || message.targetIndex < 1 || message.targetIndex > rooms[roomIndex].length - 1) {
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.TVStationActivatedState !== C.purpleState.activated || message.targetIndex < 1 || message.targetIndex > rooms[roomIndex].length - 1) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 let numberOfCoins = exchangeCoins(currentPlayer, game.players[message.targetIndex - 1], 5); // since targetIndex is not 0 indexed
@@ -279,42 +292,64 @@ wss.on('connection', function (ws) {
                 purpleIncome[message.targetIndex - 1] -= numberOfCoins; // since i is not 0 indexed
                 
                 // * * Update TVStationActivated state
-                game.TVStationActivated = C.purpleState.activateFinish;
+                game.TVStationActivatedState = C.purpleState.activateFinish;
                 
                 // * * Update player balances on each client
                 let playerBalances = game.players.map(elem => elem.balance).splice(0, 1); // remove the 0th index (the game);
-                for (let i = 1; i < rooms[roomIndex].length; i++) {
-                    // * * targetIndex starts at 1
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
-                }
+
+                // * * targetIndex starts at 1
+                sendWebsocketEveryone(roomIndex, {type: 'showFinishedTVText', yourTurn: i === playerCounter + 1, playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])});
             }
         } else if (message.type === 'businessActivate') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
             // TODO: Verify that message.targetIndex is a valid number (they cannot pick themselves as well)
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.businessCenterActivated !== C.purpleState.activated) {
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.businessCenterActivatedState !== C.purpleState.activated) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 game.businessTargetPlayerIndex = message.targetIndex - 1; // * * targetPlayerIndex is 0 indexed
 
-                // * * Update BusinessCenterActivated state
-                game.businessCenterActivated = C.purpleState.gotPlayerIndex;
+                // * * Update businessCenterActivated state
+                game.businessCenterActivatedState = C.purpleState.gotPlayerIndex;
 
                 // * * Send back data to disable establishment buttons that targetPlayer doesn't have
-                ws.send(JSON.stringify({type: 'disableBusinessButtons', disabledArray: game.players[message.targetIndex - 1].establishments.map(elem => elem === 0)}));
+                ws.send(JSON.stringify({type: 'disableBusinessReceiveButtons', disableArray: game.players[message.targetIndex - 1].establishments.map(elem => elem === 0)}));
             }
         } else if (message.type === 'businessReceiveIndex') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            // TODO: Verify that the establishment they picked is valid for the player they chose earlier
-            // TODO: Make sure targetPlayerIndex is valid before moving on (could be -1 which would crash the server) and can't pick themselves
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || !validReceiveIndex(game, message.receiveIndex) || game.businessCenterActivated !== C.purpleState.gotPlayerIndex) {
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || !validReceiveIndex(game, message.receiveIndex) || game.businessCenterActivatedState !== C.purpleState.gotPlayerIndex) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                // TODO: MAKE validReceiveIndex function bro
                 game.businessReceiveIndex = message.receiveIndex;
+
+                // * * Update businessCenterActivated state
+                game.businessCenterActivatedState = C.purpleState.gotReceiveIndex;
+
+                ws.send(JSON.stringify({type: 'disableBusinessGiveButtons', disableArray: game.players[playerCounter].establishments.map(elem => elem === 0)}));
+            }
+        } else if (message.type === 'businessGiveIndex') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            let playerCounter = game.playerCounter;
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || !validGiveIndex(game, message.giveIndex) || game.businessCenterActivatedState !== C.purpleState.gotReceiveIndex) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                // * * Trade the establishments
+                game.players[game.businessTargetPlayerIndex].establishments[message.giveIndex]++;
+                game.players[game.businessTargetPlayerIndex].establishments[game.businessReceiveIndex]--;   
+
+                game.players[playerCounter].establishments[message.giveIndex]--;                
+                game.players[playerCounter].establishments[game.businessReceiveIndex]++;                
+
+                // * * Update businessCenterActivated state
+                game.businessCenterActivatedState = C.purpleState.activateFinish;
+
+                // * * Update every client's HTML
+                // * * giveReceive means the number of the establishment you (playerCounter) GAVE to the RECEIVER (playerCounter)
+                sendWebsocketEveryone(roomIndex, {type: 'updateEstablishments', yourTurn: i === playerCounter + 1, giveIndex: message.giveIndex, receiveIndex: game.businessReceiveIndex, givePlayerIndex: game.businessTargetPlayerIndex, receivePlayerIndex: playerCounter, giveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[message.giveIndex], giveReceiveAmount: game.players[playerCounter].establishments[message.giveIndex], receiveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[game.businessReceiveIndex], receiveReceiveAmount: game.players[playerCounter].establishments[game.businessReceiveIndex]});
             }
         }
     });
