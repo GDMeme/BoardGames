@@ -271,8 +271,13 @@ export function queue(name) {
                 document.getElementById('goback').click();
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
+            } else if (message.type === 'endedTurn') {
+                document.querySelector('#playerturn').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
+                if (message.yourTurn) {
+                    document.getElementById('rolldicetext').style.display = "none";
+                }
             } else if (message.type === 'yourTurn') {
-                playerTurn(); // TODO: fix this
+                playerTurnLayout(); // TODO: fix this
             } else if (message.type === 'rolledDice') {
                 document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerCounter + 1} rolled a ${message.roll} </u>`;
                 if (message.yourTurn) {
@@ -356,7 +361,7 @@ export function queue(name) {
 
                     document.getElementById('giveindex').style.display = "none";
 
-                    // enable shop buttons
+                    // * * Enable shop buttons
                     document.getElementById('buysomething').style.display = "inline";
                     enableShop(game);
 
@@ -380,6 +385,20 @@ export function queue(name) {
                 for (let i = 0; i < game.players.length; i++) {
                     document.getElementById(`greenblueincome${i + 1}`).style.display = message.greenBlueIncome[i] === 0 ? "none" : "flex";
                     document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${message.greenBlueIncome[i]} ${(message.greenBlueIncome[i] > 1 || message.greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
+                }
+            } else if (message.type === 'incomeReceived') {
+                if (!message.income.every(income => income === 0)) {
+                    document.getElementById('incomesummary').style.display = "inline";
+                }
+        
+                // Buy establishment/landmark
+                // * * Must trade before buying an establishment/landmark
+                if (message.yourTurn) {
+                    if (!message.businessActivated) {
+                        document.getElementById('buysomething').style.display = "inline";
+                        enableShop(game.players, game.playerCounter);
+                        // TODO: Fix the other enableShop call
+                    }
                 }
             }
         });

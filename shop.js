@@ -3,6 +3,7 @@ import { end } from './end.js';
 import * as C from './constants.js';
 
 export function buy(building_num, game) {// * * 15 16 17 18 are the landmarks
+    // TODO: Fix this entire part
     const { name, displayName, cost } = C.buildings[building_num];
     let currentPlayer = game.players[game.playerCounter];
     currentPlayer.balance -= cost;
@@ -31,18 +32,27 @@ export function buy(building_num, game) {// * * 15 16 17 18 are the landmarks
     document.getElementById('roll2dicecheckbox').disabled = true;
 }
 
-export function enableShop(game) {
-    let currentPlayer = game.players[game.playerCounter];
+// * * Need all players for maximumEstablishments function
+export function enableShop(players, playerCounter) {
+    let currentPlayer = players[playerCounter];
     for (let i = 0; i < 15; i++) { // establishments
         const { name, cost } = C.buildings[i];
         if (i === 6 || i === 7 || i === 8) { // 6, 7, 8 are purple establishments
             document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || currentPlayer.establishments[i] === 1;
         } else {
-            document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || maximumEstablishments(game.players, i);
+            document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || maximumEstablishments(players, i);
         }
     }
     for (let i = 15; i < 19; i++) { // landmarks
         const { name, cost } = C.buildings[i];
         document.getElementById(`buy${name}button`).disabled = currentPlayer.balance < cost || currentPlayer.landmarks[i - 15];
     }
+}
+
+function maximumEstablishments(players, index) { // * * Note: This doesn't account for the purple establishments
+    let sum = 0;
+    for (let i = 0; i < players.length; i++) {
+        sum += players[i].establishments[index];
+    }
+    return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
 }

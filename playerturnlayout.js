@@ -43,22 +43,5 @@ function rollDice(rollTwoDice, counter, rollNumber, game, notReroll) { // checke
         setTimeout(rollDice, counter !== 10 ? 100 : 0, rollTwoDice, counter, newRollNumber, game, notReroll); // poll until counter reaches 10
     } else {
         ws.send(JSON.stringify({type: 'rollDice', roomID: roomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
-
-
-
-
-        // TODO: Do this once the dice roll is received
-        // everyone collects income
-        let currentIncome = income(rollNumber, game);
-        if (!currentIncome.every(income => income === 0)) {
-            document.getElementById('incomesummary').style.display = "inline";
-        }
-
-        // buy establishment/landmark
-        if (!(rollNumber === 6 && currentPlayer.establishments[8])) {
-            document.getElementById('buysomething').style.display = "inline";
-            enableShop(game);
-        }
-        return currentIncome;
     }
 }

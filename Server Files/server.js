@@ -41,9 +41,7 @@ function removePlayer(ws, roomID, playerName) {
     WStoRoomID.delete(ws);
     let playerIndex = rooms[roomIndex].findIndex(elem => elem === ws);
     rooms[roomIndex].splice(playerIndex, 1);
-    for (let i = 1; i < rooms[roomIndex].length; i++) { // 1 because ignore the first element
-        rooms[roomIndex][i].send(JSON.stringify({type: 'removePlayer', name: playerName, indexToRemove: playerIndex - 1, newHost: playerIndex === 1})); // 1 because ignore the first element
-    }
+    sendWebsocketEveryone(roomIndex, {type: 'removePlayer', name: playerName, indexToRemove: playerIndex - 1, newHost: playerIndex === 1});
     if (playerIndex === 1 && rooms[roomIndex].length > 1) { // 1 because ignore the first element
         rooms[roomIndex][1].send(JSON.stringify({type: 'newHost'})); // 1 because ignore the first element; tell the new host
     }
@@ -57,7 +55,6 @@ function verifyWebsocket(ws, roomIndex, playerCounter) {
 }
 
 function validPurchase(game, playerCounter, shopIndex) {
-    // TODO: Verify that they have not already bought that landmark
     if (shopIndex < 0 || shopIndex > 18 || game.players[playerCounter].balance < C.buildings[shopIndex].cost) {
         return false;
     }
@@ -73,7 +70,7 @@ function validPurchase(game, playerCounter, shopIndex) {
     return true;
 }
 
-function maximumEstablishments(players, index) {
+function maximumEstablishments(players, index) { // * * Note: This doesn't account for the purple establishments
     let sum = 0;
     for (let i = 0; i < players.length; i++) {
         sum += players[i].establishments[index];
@@ -184,14 +181,6 @@ wss.on('connection', function (ws) {
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || !TVStationCheck || !businessCenterCheck) { // any other state is OK
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                // * * Update playerCounter (if applicable)
-                if (!(game.state === C.state.rolledDoubles || game.state === C.state.rerolledDoubles)) { // Amusement Park did not activate
-                    game.playerCounter++;
-                }
-                if (game.playerCounter === game.numberOfPlayers) {
-                    game.playerCounter = 0;
-                }
-
                 // * * Update the game state
                 game.state = C.state.newTurn;
 
@@ -204,9 +193,18 @@ wss.on('connection', function (ws) {
                 // * * Reset income for next turn
                 game.income = undefined;
 
-                // TODO: When it's the next player's turn, send a message to everyone to update this innerHTML and style display
-                document.querySelector('#playerturn').innerHTML = `Player ${game.playerCounter + 1}'s turn!`; // since playerCounter is 0 indexed
-                document.getElementById('rolldicetext').style.display = "none";
+                // * * playerCounter was already incremented
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    rooms[roomIndex][i].send({type: 'endedTurn', nextPlayerName: WStoPlayerName.get(rooms[roomIndex][playerCounter]), yourTurn: i === playerCounter});
+                }
+
+                // * * Update playerCounter (if applicable)
+                if (!(game.state === C.state.rolledDoubles || game.state === C.state.rerolledDoubles)) { // Amusement Park did not activate
+                    game.playerCounter++;
+                }
+                if (game.playerCounter === game.numberOfPlayers) {
+                    game.playerCounter = 0;
+                }
 
                 // * * Tell the next player it's their turn
                 rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn'}));
@@ -235,15 +233,21 @@ wss.on('connection', function (ws) {
                 }
                 
                 // * * Update every client's HTML
-                sendWebsocketEveryone(roomIndex, {type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1});
+                for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1}));
+                }
 
                 // * * Update game state
                 let alreadyRolled = (game.state === C.state.rolled) || (game.state === C.state.rolledDoubles);
-                game.state = alreadyRolled ? (game.state = doubles ? C.state.rerolledDoubles : C.state.rerolled) : (game.state = doubles ? C.state.rolledDoubles : C.state.rolled);
+                game.state = alreadyRolled ? (doubles ? C.state.rerolledDoubles : C.state.rerolled) : (doubles ? C.state.rolledDoubles : C.state.rolled);
                 // Checked Radio Tower above
 
                 // * * Calculate everyone's income
                 game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName, roomIndex);
+
+                for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'incomeReceived', income: game.income, yourTurn: i === playerCounter + 1, players: game.players, playerCounter: playerCounter}));
+                }
             }
         } else if (message.type === 'buySomething') {
             let roomIndex = findRoomIndex(message.roomID);
@@ -263,7 +267,7 @@ wss.on('connection', function (ws) {
                     sendWebsocketEveryone(roomIndex, {type: 'boughtEstablishment', shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]});
                 } else {
                     game.players[playerCounter].landmarks[message.shopIndex - 15] = true; 
-                    // TODO: Maybe a message saying that they bought a landmark even though the won?
+                    // TODO: Maybe a message saying that they bought a landmark even though they won?
                     if (game.players[playerCounter].landmarks.every(v => v === true)) { // Player wins!
                         // TODO: Make the end screen 
                     } else { // Game continues
@@ -292,7 +296,10 @@ wss.on('connection', function (ws) {
                 let playerBalances = game.players.map(elem => elem.balance).splice(0, 1); // remove the 0th index (the game);
 
                 // * * targetIndex starts at 1
-                sendWebsocketEveryone(roomIndex, {type: 'showFinishedTVText', yourTurn: i === playerCounter + 1, playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])});
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    // * * targetIndex starts at 1
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
+                }
             }
         } else if (message.type === 'businessActivate') {
             let roomIndex = findRoomIndex(message.roomID);
@@ -343,7 +350,9 @@ wss.on('connection', function (ws) {
 
                 // * * Update every client's HTML
                 // * * giveReceive means the number of the establishment you (playerCounter) GAVE to the RECEIVER (playerCounter)
-                sendWebsocketEveryone(roomIndex, {type: 'updateEstablishments', yourTurn: i === playerCounter + 1, giveIndex: message.giveIndex, receiveIndex: game.businessReceiveIndex, givePlayerIndex: game.businessTargetPlayerIndex, receivePlayerIndex: playerCounter, giveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[message.giveIndex], giveReceiveAmount: game.players[playerCounter].establishments[message.giveIndex], receiveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[game.businessReceiveIndex], receiveReceiveAmount: game.players[playerCounter].establishments[game.businessReceiveIndex]});
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'updateEstablishments', yourTurn: i === playerCounter + 1, giveIndex: message.giveIndex, receiveIndex: game.businessReceiveIndex, givePlayerIndex: game.businessTargetPlayerIndex, receivePlayerIndex: playerCounter, giveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[message.giveIndex], giveReceiveAmount: game.players[playerCounter].establishments[message.giveIndex], receiveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[game.businessReceiveIndex], receiveReceiveAmount: game.players[playerCounter].establishments[game.businessReceiveIndex]}));
+                }
             }
         }
     });
@@ -352,6 +361,9 @@ wss.on('connection', function (ws) {
         let roomID = WStoRoomID.get(ws);
         if (roomID !== undefined) {
             removePlayer(ws, roomID, WStoPlayerName.get(ws)); // WStoRoomID gets deleted here
+            if (rooms.length === 0) {
+                roomIDCounter = 0;
+            }
         }
         WStoPlayerName.delete(ws);
     });
