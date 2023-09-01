@@ -528,7 +528,7 @@ function updateBalances(playerBalances) {
 
 function connect() {
     return new Promise(function(resolve, reject) {
-        var ws = new WebSocket('wss://localhost:8080');
+        var ws = new WebSocket('wss://0.tcp.ngrok.io:18905');
         document.getElementById('connectionfailed').style.display = "none";
         document.getElementById('loader').style.display = "inline";
         document.getElementById('waitingforserver').style.display = "block";
