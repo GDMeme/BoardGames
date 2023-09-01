@@ -1,6 +1,7 @@
 import { startGameLayout } from './startgamelayout.js';
-
 import { playerTurnLayout } from './playerturnlayout.js';
+import { enableShop } from './shop.js';
+import { end } from './end.js';
 
 import * as C from './constants.js';
 
@@ -176,6 +177,12 @@ export function queue(name) {
             }
         }
 
+        // * * Set up save game button
+        // TODO: Only the host can see this button 
+        document.getElementById('savegamebutton').onclick = function() {
+            ws.send(JSON.stringify({type: 'requestSave', roomID: currentRoomID}));
+        }
+
         // Listen for messages
         ws.addEventListener("message", (message) => {
             message = JSON.parse(message.data); // don't need try/catch because server is sending the message (guaranteed to be valid)
@@ -262,7 +269,7 @@ export function queue(name) {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
                 numberOfPlayers = document.getElementById('playerlist').children.length - 1;
-                startGameLayout(numberOfPlayers, ws, currentRoomID); // 1 because it has an extra child
+                startGameLayout(numberOfPlayers, ws, currentRoomID);
                 document.getElementById('playerturntext').style.display = "block";
                 if (message.startingPlayer) {
                     playerTurnLayout();
@@ -273,8 +280,23 @@ export function queue(name) {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
             } else if (message.type === 'endedTurn') {
                 document.querySelector('#playerturn').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
+                for (let i = 0; i < game.players.length; i++) {
+                    document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
+                    document.getElementById(`redincome${i + 1}`).style.display = "none";
+                    document.getElementById(`greenblueincome${i + 1}`).style.display = "none";
+                }
+                document.getElementById('tvplayertextbuttons').style.display = "none";
+                document.getElementById('businesstext').style.display = "none";
+                document.getElementById('incomesummary').style.display = "none";
                 if (message.yourTurn) {
                     document.getElementById('rolldicetext').style.display = "none";
+                    document.getElementById('rolldicebutton').disabled = false;
+                    document.getElementById('endturnbutton').disabled = true;
+                    document.getElementById('rollnumber').style.display = "none";
+                    document.getElementById('roll2dicecheckbox').checked = false;
+                    document.getElementById('buysomething').style.display = "none";
+                    document.getElementById('rolldoubles').style.display = "none";
+                    document.getElementById('roll2dicecheckbox').style.display = "inline";
                 }
             } else if (message.type === 'yourTurn') {
                 playerTurnLayout(); // TODO: fix this
@@ -288,10 +310,12 @@ export function queue(name) {
                 }
             } else if (message.type === 'boughtEstablishment') {
                 const { name, displayName } = C.buildings[message.shopIndex];
-                document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${currentPlayer.establishments[building_num]}`;
+                document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${message.quantity}`;
+                document.querySelector(`#balance${message.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'boughtLandmark') {
                 const { name, displayName } = C.buildings[message.shopIndex];
                 document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: Unlocked`;
+                document.querySelector(`#balance${message.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'showStadiumText') {
                 document.getElementById(`stadiumtext${message.index}`).style.display = "block";
                 document.querySelector(`#stadiumtext${message.index}`).innerHTML = `${message.giverName} gave ${message.amount} coins to Player ${message.receiverName}.`;
@@ -400,6 +424,31 @@ export function queue(name) {
                         // TODO: Fix the other enableShop call
                     }
                 }
+            } else if (message.type === 'endGame') {
+                document.getElementById('entiregame').style.display = "none";
+
+                // TODO: Make the end screen
+                end(message.winnerIndex);
+            } else if (message.type === 'boughtSomething') {
+                // disable all shop buttons after buying something
+                document.querySelectorAll('.shop').forEach(button => button.disabled = true);
+
+                // disable the reroll button
+                document.getElementById('rerollbutton').disabled = true;
+
+                // disable the roll 2 dice checkbox
+                document.getElementById('roll2dicecheckbox').disabled = true;
+            } else if (message.type === 'saveGame') {
+                document.getElementById('savegametext').style.display = "inline";
+                document.querySelector('#temporarysavegametext').innerHTML = JSON.stringify(message.game);
+                document.getElementById('savegamebutton').disabled = true; // disable the save button
+            } else if (message.type === 'enableSaveGame') {
+                // Enable the save game button
+                document.getElementById('savegamebutton').disabled = false;
+            } else if (message.type === 'disableSaveGame') {
+                // Disable the save game button
+                // TODO: Only the host should be able to see this button, and they should always be able to see it (disabled or not)
+                document.getElementById('savegamebutton').disabled = true;
             }
         });
 

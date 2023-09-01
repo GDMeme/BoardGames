@@ -54,6 +54,10 @@ function verifyWebsocket(ws, roomIndex, playerCounter) {
     return ws === rooms[roomIndex][playerCounter + 1]; // 1 because 0th index is the game
 }
 
+function verifyHostWebsocket(ws, roomIndex) {
+    return ws === rooms[roomIndex][1];
+}
+
 function validPurchase(game, playerCounter, shopIndex) {
     if (shopIndex < 0 || shopIndex > 18 || game.players[playerCounter].balance < C.buildings[shopIndex].cost) {
         return false;
@@ -206,20 +210,27 @@ wss.on('connection', function (ws) {
                     game.playerCounter = 0;
                 }
 
+                // * * Enable the save game button
+                rooms[roomIndex][1].send(JSON.stringify({type: 'enableSaveGame'}));
+
                 // * * Tell the next player it's their turn
-                rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn'}));
+                rooms[roomIndex][playerCounter + 1].send(JSON.stringify({type: 'yourTurn', rollTwoDice: rooms[roomIndex][playerCounter + 1].landmarks[0]}));
             }
         } else if (message.type === 'rollDice') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
 
+            // TODO: There is a different button for rerolling u idiot fix this
             // * * Verify they have not already rolled/Radio Tower stuff
             let alreadyRerolled = (game.state === C.state.rerolled) || (game.state === C.state.rerolledDoubles);
             let businessCenterCheck = (game.businessCenterActivatedState === C.purpleState.didNotActivate) || (game.businessCenterActivatedState === C.purpleState.activated);
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || alreadyRerolled || game.state === C.state.bought || game.TVStationActivatedState === C.purpleState.activateFinish || !businessCenterCheck || ((game.state === C.state.rolled || game.state === C.state.rolledDoubles) && !game.players[playerCounter].landmarks[3])) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
+                // * * Disable the save game button
+                rooms[roomIndex][1].send(JSON.stringify({type: 'disableSaveGame'}))
+
                 let doubles = false;
                 let roll = Math.floor(Math.random() * 6 + 1);
 
@@ -253,7 +264,8 @@ wss.on('connection', function (ws) {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
-            // * * You should be able to buy something while TV Station/Business Center is activated
+            // * * You should be able to buy something while TV Station is activated
+            // TODO: You cannot buy something while business center is activated
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.bought || game.state === C.state.newTurn || !validPurchase(game, playerCounter, message.shopIndex)) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
@@ -262,16 +274,18 @@ wss.on('connection', function (ws) {
                 // * * Update game state
                 game.state = C.state.bought;
 
-                if (message.index < 15) {
+                if (message.index < 15) { // bought an establishment
                     game.players[playerCounter].establishments[message.shopIndex]++;
-                    sendWebsocketEveryone(roomIndex, {type: 'boughtEstablishment', shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]});
-                } else {
+                    sendWebsocketEveryone(roomIndex, {type: 'boughtEstablishment', newBalance: game.players[playerCounter].balance, shopIndex: message.shopIndex, playerCounter: playerCounter, quantity: game.players[playerCounter].establishments[message.shopIndex]});
+                    ws.send(JSON.stringify({type: 'boughtSomething'}));
+                } else { // bought a landmark
                     game.players[playerCounter].landmarks[message.shopIndex - 15] = true; 
                     // TODO: Maybe a message saying that they bought a landmark even though they won?
-                    if (game.players[playerCounter].landmarks.every(v => v === true)) { // Player wins!
-                        // TODO: Make the end screen 
+                    if (game.players[playerCounter].landmarks.every(landmark => landmark === true)) { // Player wins!
+                        sendWebsocketEveryone(roomIndex, {type: 'endGame', winnerIndex: playerCounter});
                     } else { // Game continues
-                        sendWebsocketEveryone(roomIndex, {type: 'boughtLandmark', shopIndex: message.shopIndex, playerCounter: playerCounter})
+                        sendWebsocketEveryone(roomIndex, {type: 'boughtLandmark', newBalance: game.players[playerCounter].balance, shopIndex: message.shopIndex, playerCounter: playerCounter})
+                        ws.send(JSON.stringify({type: 'boughtSomething'}));
                     }
                 }
             }
@@ -353,6 +367,17 @@ wss.on('connection', function (ws) {
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
                     rooms[roomIndex][i].send(JSON.stringify({type: 'updateEstablishments', yourTurn: i === playerCounter + 1, giveIndex: message.giveIndex, receiveIndex: game.businessReceiveIndex, givePlayerIndex: game.businessTargetPlayerIndex, receivePlayerIndex: playerCounter, giveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[message.giveIndex], giveReceiveAmount: game.players[playerCounter].establishments[message.giveIndex], receiveGiveAmount: game.players[game.businessTargetPlayerIndex].establishments[game.businessReceiveIndex], receiveReceiveAmount: game.players[playerCounter].establishments[game.businessReceiveIndex]}));
                 }
+            }
+        } else if (message.type === 'requestSave') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            // * * Only the host can save the game
+            if (!verifyHostWebsocket(ws, roomIndex) || game.state !== C.state.newTurn) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                ws.send(JSON.stringify({type: 'saveGame', game: game}));
+
+                // TODO: Send a message to everyone saying the game has been saved
             }
         }
     });

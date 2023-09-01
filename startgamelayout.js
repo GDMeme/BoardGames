@@ -1,7 +1,3 @@
-import { Game } from './Server Files/game.js';
-
-import { buy } from './shop.js';
-
 import { playerTurnLayout } from './playerturnlayout.js';
 
 import { updateBalances, updateEstablishmentsLandmarks } from './Server Files/calculateIncome.js';
@@ -74,14 +70,6 @@ export function startGameLayout(numberOfPlayers) { // existingGame could also re
         }
     }
 
-    for (let i = 0; i < buttonIDs.length; i++) {
-        const id = buttonIDs[i];
-        document.getElementById(`buy${id}button`).onclick = function() {
-            
-            // buy(i, game);
-        }
-    }
-
 
 
 
@@ -104,15 +92,5 @@ export function startGameLayout(numberOfPlayers) { // existingGame could also re
 
         game.playerCounter = endTurn(game, true); // true means player rerolled
         playerTurnLayout(game, false);
-    }
-
-    // document.getElementById('rolldicebutton').onclick = function () {
-    //     income = playerTurnLayout(game, true); // need to keep track of income to account for rerolling
-    // }
-
-    document.getElementById('savegamebutton').onclick = function() {
-        document.getElementById('savegametext').style.display = "inline";
-        document.querySelector('#temporarysavegametext').innerHTML = JSON.stringify(game);
-        document.getElementById('savegamebutton').disabled = true; // disable the save button
     }
 }
