@@ -4,7 +4,7 @@ import { createServer } from 'https';
 
 import { Game } from './game.js';
 import { Player } from './player.js';
-import { calculateIncome } from './calculateIncome.js';
+import { calculateIncome, exchangeCoins } from './calculateIncome.js';
 
 import * as C from './constants.js';
 
@@ -62,14 +62,14 @@ function validPurchase(game, playerCounter, shopIndex) {
     if (shopIndex < 0 || shopIndex > 18 || game.players[playerCounter].balance < C.buildings[shopIndex].cost) {
         return false;
     }
-    if (maximumEstablishments(game.players, shopIndex)) {
+    if (maximumEstablishments(game.players, shopIndex)) { // TODO: make this account for landmarks
         return false;
     }
     if (shopIndex >= 6 && shopIndex <= 8) {
         return game.players[playerCounter].establishments[shopIndex] !== 1;
     }
     if (shopIndex >= 15) {
-        return game.players[playerCounter].landmarks[shopIndex] === false;
+        return game.players[playerCounter].landmarks[shopIndex - 15] === false;
     }
     return true;
 }
@@ -214,7 +214,10 @@ wss.on('connection', function (ws) {
             } else {
                 // they are removed from rooms when removePlayer is received
                 rooms[roomIndex][message.indexToKick + 2].send(JSON.stringify({type: 'kickedPlayer'})); // add 2 because ignore the first element and the host spot
-                sendWebsocketEveryone(roomIndex, {type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2});
+                
+                for (let i = 1; i < rooms[roomIndex].length; i++) {
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2}));
+                }
             }
         } else if (message.type === 'endTurn') {
             let roomIndex = findRoomIndex(message.roomID);

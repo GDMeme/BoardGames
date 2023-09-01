@@ -37,6 +37,12 @@ const buttonIDs = C.buildings.map(building => building.name);
 
 // TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
 
+// TODO: x at the top right of the chat to close it
+
+// TODO: income summary text spacing is not right
+
+// TODO: income summary shows 'player 1' instead of the actual player's name
+
 export function queue(name) {   
     playerName = name;
     connect().then(function(websocket) {

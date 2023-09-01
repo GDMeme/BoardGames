@@ -25,7 +25,7 @@ function redActivate(game, flag, redIncome) { // if flag, rolled 3
     return redIncome;
 }
 
-function exchangeCoins(player, targetPlayer, amount) { // returns the positive amount of coins exchanged
+export function exchangeCoins(player, targetPlayer, amount) { // returns the positive amount of coins exchanged
     // "player" receives the money
     // accounts for balance not being able to go negative
     if (targetPlayer.balance >= amount) {
