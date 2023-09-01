@@ -49,67 +49,69 @@
             <button id="submitroomnamebutton">Submit</button>
         </div>
         <div id="entiregame">
-            <div id="playernametext">
-                <p>
-                    <u>
-                        Enter your name!
-                    </u>
-                </p>
-                <p>
-                    <input type="text" id="playernameinput" size="15"  maxlength="18">
-                </p>
-                <button id="submitplayernamebutton">Submit</button>
-            </div>
-            <div id="roomnamelabel" style="display: none; font-weight: bold; text-decoration: underline">Room Name: </div>
-            <div id="goback" style="display: none">
-                <p></p>
-                <button id="gobackbutton">
-                    Go Back
-                </button>
-                <br>
-                <br>
-            </div>
-            <div id="roombuttons" style="display: none">
-                <p>Do you want to create a room or join a room?</p>
-                <button id="createroombutton">
-                    Create Room!
-                </button>
-                <button id="joinroombutton">
-                    Join Room!
-                </button>
-            </div>
-            <div id="waitingplayers" style="display: none; font-size: large">
-                <p>
-                    Waiting for other players...
-                </p>
-            </div>
-            <div id="waitinghost" style="display: none; font-size: large">
-                <p>
-                    Waiting for host to start the game...
-                </p>
-            </div>
-            <div id="playerlist" style="display: none">
-                <u>Players</u>
-            </div>
-            <button id="testbutton" style="position: absolute; bottom: 5px">
-                click me
-            </button>
-            <div id="startgame" style="display: none">
-                <br>
-                <br>
-                <br>
-                <button id="startgamebutton" disabled>
-                    Start Game!
-                </button>
-                <br>
-                <br>
-                <div>
-                    <br>
-                    <div>Click here to upload an existing game! (If you have one)</div>
-                    <input type="file" id="existinggamefile" onclick="this.value=null;" style="text-align-last: center">
+            <div id="beforestartgame">
+                <div id="playernametext">
+                    <p>
+                        <u>
+                            Enter your name!
+                        </u>
+                    </p>
+                    <p>
+                        <input type="text" id="playernameinput" size="15"  maxlength="18">
+                    </p>
+                    <button id="submitplayernamebutton">Submit</button>
                 </div>
-                <div id="invalidfiletext" style="display: none">
-                    Invalid save file detected! Try again.
+                <div id="roomnamelabel" style="display: none; font-weight: bold; text-decoration: underline">Room Name: </div>
+                <div id="goback" style="display: none">
+                    <p></p>
+                    <button id="gobackbutton">
+                        Go Back
+                    </button>
+                    <br>
+                    <br>
+                </div>
+                <div id="roombuttons" style="display: none">
+                    <p>Do you want to create a room or join a room?</p>
+                    <button id="createroombutton">
+                        Create Room!
+                    </button>
+                    <button id="joinroombutton">
+                        Join Room!
+                    </button>
+                </div>
+                <div id="waitingplayers" style="display: none; font-size: large">
+                    <p>
+                        Waiting for other players...
+                    </p>
+                </div>
+                <div id="waitinghost" style="display: none; font-size: large">
+                    <p>
+                        Waiting for host to start the game...
+                    </p>
+                </div>
+                <div id="playerlist" style="display: none">
+                    <u>Players</u>
+                </div>
+                <button id="testbutton" style="position: absolute; bottom: 5px">
+                    click me
+                </button>
+                <div id="startgame" style="display: none">
+                    <br>
+                    <br>
+                    <br>
+                    <button id="startgamebutton" disabled>
+                        Start Game!
+                    </button>
+                    <br>
+                    <br>
+                    <div>
+                        <br>
+                        <div>Click here to upload an existing game! (If you have one)</div>
+                        <input type="file" id="existinggamefile" onclick="this.value=null;" style="text-align-last: center">
+                    </div>
+                    <div id="invalidfiletext" style="display: none">
+                        Invalid save file detected! Try again.
+                    </div>
                 </div>
             </div>
             <div style="justify-content: space-between; margin: 0px 150px; display: none" id="player12inventory">
@@ -197,7 +199,7 @@
                             </div>
                         </p>
                         <p>
-                            <div>
+                            <div id="rolldice">
                                 <button id="rolldicebutton">
                                     Click here to roll the dice!
                                 </button>
@@ -591,16 +593,16 @@
                         Player 4 received x from green/blue establishments. 
                         <br>
                     </div>
-                    <div>
-                        <button id="endturnbutton" disabled style="display: none">
+                    <div id="endturn" style="display: none">
+                        <button id="endturnbutton" disabled>
                             <div style="font-size: 35px">
                                 End Turn
                             </div>
                         </button>
                     </div>
                     <br>
-                    <div>
-                        <button id="savegamebutton" disabled style="display: none">
+                    <div id="savegame" style="display: none">
+                        <button id="savegamebutton" disabled>
                             <div style="font-size: 20px">
                                 Save Game
                             </div>

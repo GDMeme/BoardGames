@@ -1,5 +1,3 @@
-import { enableShop } from '../shop.js';
-
 import * as C from './constants.js';
 
 import { sendWebsocketEveryone } from './server.js';
@@ -125,7 +123,7 @@ export function calculateIncome(roll, game, room, WStoPlayerName, roomIndex) { /
             }
         }
         // * * Update balance for each client's HTML 
-        sendWebsocketEveryone(roomIndex, {type: 'updateBalances', playerIndex: playerCycleIndex, newBalance: player.balance});
+        sendWebsocketEveryone(roomIndex, {type: 'updateBalance', playerIndex: playerCycleIndex, newBalance: player.balance});
 
         greenBlueIncome[playerCycleIndex] = currentIncome;
         playerCycleIndex++;

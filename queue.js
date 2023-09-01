@@ -177,10 +177,25 @@ export function queue(name) {
             }
         }
 
-        // * * Set up save game button
-        // TODO: Only the host can see this button 
+        // * * Set up save game button 
         document.getElementById('savegamebutton').onclick = function() {
             ws.send(JSON.stringify({type: 'requestSave', roomID: currentRoomID}));
+        }
+
+        // * * Set up reroll button
+        document.getElementById('rerollbutton').onclick = function () {
+            ws.send(JSON.stringify({type: 'rerollDice', roomID: currentRoomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
+
+            // TODO: Put this stuff when you receive the message back that the reroll was valid
+            document.getElementById('rerollbutton').disabled = true;
+            document.getElementById('rolldoubles').style.display = "none";
+    
+            // subtract the income they got from the original roll
+
+            updateBalances(game.players);
+    
+            game.playerCounter = endTurn(game, true); // true means player rerolled
+            playerTurnLayout(game, false);
         }
 
         // Listen for messages
@@ -269,18 +284,25 @@ export function queue(name) {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
                 numberOfPlayers = document.getElementById('playerlist').children.length - 1;
+                for (let i = 0; i < numberOfPlayers; i++) {
+                    document.getElementById(`player${i + 1}text`).innerHTML = `<u>${message.playerNames[i]}</u>`;
+                }
                 startGameLayout(numberOfPlayers, ws, currentRoomID);
+                document.getElementById('beforestartgame').style.display = "none";
                 document.getElementById('playerturntext').style.display = "block";
                 if (message.startingPlayer) {
-                    playerTurnLayout();
+                    // * * Only the host can save game
+                    document.getElementById('savegame').style.display = "block";
+
+                    playerTurnLayout(false, ws, currentRoomID); // TODO: If they loaded a game, this might not always be false
                 }
             } else if (message.type === 'kickedPlayer') {
                 document.getElementById('goback').click();
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
             } else if (message.type === 'endedTurn') {
-                document.querySelector('#playerturn').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
-                for (let i = 0; i < game.players.length; i++) {
+                document.querySelector('#playerturntext').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
+                for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
                     document.getElementById(`redincome${i + 1}`).style.display = "none";
                     document.getElementById(`greenblueincome${i + 1}`).style.display = "none";
@@ -288,7 +310,10 @@ export function queue(name) {
                 document.getElementById('tvplayertextbuttons').style.display = "none";
                 document.getElementById('businesstext').style.display = "none";
                 document.getElementById('incomesummary').style.display = "none";
+                console.log('message.yourturn', message.yourTurn);
                 if (message.yourTurn) {
+                    document.getElementById('endturn').style.display = "none";
+                    document.getElementById('endturn').disabled = true;
                     document.getElementById('rolldicetext').style.display = "none";
                     document.getElementById('rolldicebutton').disabled = false;
                     document.getElementById('endturnbutton').disabled = true;
@@ -299,18 +324,19 @@ export function queue(name) {
                     document.getElementById('roll2dicecheckbox').style.display = "inline";
                 }
             } else if (message.type === 'yourTurn') {
-                playerTurnLayout(); // TODO: fix this
+                playerTurnLayout(message.rollTwoDice, ws, currentRoomID);
             } else if (message.type === 'rolledDice') {
                 document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerCounter + 1} rolled a ${message.roll} </u>`;
                 if (message.yourTurn) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
-                    document.getElementById('roll2dicecheckbox').disabled = !(notReroll && currentPlayer.landmarks[3] && currentPlayer.landmarks[0]); // able to roll two dice if rerolling, radio tower and train station
-                    document.getElementById('rerollbutton').disabled = !(currentPlayer.landmarks[3] && notReroll);
+                    document.getElementById('roll2dicecheckbox').disabled = !(message.trainStation && message.ableToReroll); // able to roll two dice if rerolling, radio tower and train station
+                    document.getElementById('rerollbutton').disabled = !message.ableToReroll;
                 }
             } else if (message.type === 'boughtEstablishment') {
                 const { name, displayName } = C.buildings[message.shopIndex];
                 document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${message.quantity}`;
+                console.log('newbalance', message.newBalance);
                 document.querySelector(`#balance${message.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'boughtLandmark') {
                 const { name, displayName } = C.buildings[message.shopIndex];
@@ -387,7 +413,7 @@ export function queue(name) {
 
                     // * * Enable shop buttons
                     document.getElementById('buysomething').style.display = "inline";
-                    enableShop(game);
+                    enableShop(message.players, message.playerCounter);
 
                     document.getElementById(`businessplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
 
@@ -398,15 +424,15 @@ export function queue(name) {
 
                     document.getElementById('endturnbutton').disabled = false;
                 }
-            } else if (message.type === 'updateBalances') {
+            } else if (message.type === 'updateBalance') {
                 document.querySelector(`#balance${message.playerIndex + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'showRedIncome') {
-                for (let i = 0; i < game.players.length; i++) {
+                for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`redincome${i + 1}`).style.display = message.redIncome[i] === 0 ? "none" : "flex";
                     document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${message.redIncome[i] > 0 ? 'received' : 'lost'} ${message.redIncome[i] > 0 ? message.redIncome[i] : -message.redIncome[i]} ${(message.redIncome[i] > 1 || message.redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
                 }
             } else if (message.type === 'showGreenBlueIncome') {      
-                for (let i = 0; i < game.players.length; i++) {
+                for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`greenblueincome${i + 1}`).style.display = message.greenBlueIncome[i] === 0 ? "none" : "flex";
                     document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${message.greenBlueIncome[i]} ${(message.greenBlueIncome[i] > 1 || message.greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
                 }
@@ -420,8 +446,7 @@ export function queue(name) {
                 if (message.yourTurn) {
                     if (!message.businessActivated) {
                         document.getElementById('buysomething').style.display = "inline";
-                        enableShop(game.players, game.playerCounter);
-                        // TODO: Fix the other enableShop call
+                        enableShop(message.players, message.playerCounter);
                     }
                 }
             } else if (message.type === 'endGame') {
@@ -449,6 +474,8 @@ export function queue(name) {
                 // Disable the save game button
                 // TODO: Only the host should be able to see this button, and they should always be able to see it (disabled or not)
                 document.getElementById('savegamebutton').disabled = true;
+            } else if (message.type === 'updateBalances') {
+                updateBalances(message.newBalances);
             }
         });
 

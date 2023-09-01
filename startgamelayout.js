@@ -1,9 +1,3 @@
-import { playerTurnLayout } from './playerturnlayout.js';
-
-import { updateBalances, updateEstablishmentsLandmarks } from './Server Files/calculateIncome.js';
-
-import { endTurn } from './endturn.js';
-
 import * as C from './constants.js';
 
 export function startGameLayout(numberOfPlayers) { // existingGame could also represent the player names
@@ -68,29 +62,5 @@ export function startGameLayout(numberOfPlayers) { // existingGame could also re
                 document.getElementById('imgWrap').style.margin = '0px ' + (document.getElementById('incomesummary').style.display === "inline" ? (j < 15 ? '-90px' : '-36px') : (j < 15 ? '-195px' : '-141px'));
             }
         }
-    }
-
-
-
-
-
-
-
-
-
-    // * * Reroll stuff
-    let income; // TODO: Could put this as part of game class
-    document.getElementById('rerollbutton').onclick = function () {
-        document.getElementById('rerollbutton').disabled = true;
-        document.getElementById('rolldoubles').style.display = "none";
-
-        // subtract the income they got from the original roll
-        for (let i = 0; i < players.length; i++) {
-            game.players[i].balance -= income[i];
-        }
-        updateBalances(game.players);
-
-        game.playerCounter = endTurn(game, true); // true means player rerolled
-        playerTurnLayout(game, false);
     }
 }
