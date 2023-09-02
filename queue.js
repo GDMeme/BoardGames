@@ -333,7 +333,7 @@ export function queue(name) {
                 playerTurnLayout(message.rollTwoDice, ws, currentRoomID);
             } else if (message.type === 'rolledDice') {
                 document.getElementById('rollnumber').style.display = "block";
-                document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerCounter + 1} rolled a ${message.roll} </u>`;
+                document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerName} rolled a ${message.roll}! </u>`;
                 if (message.yourTurn) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
@@ -389,7 +389,7 @@ export function queue(name) {
                 // * * Disable receive establishment buttons that the other player does not have
                 for (let i = 0; i < 15; i++) {
                     if (i !== 6 && i !== 7 && i !== 8) {
-                        document.getElementById(`receive${displayNames[i]}button`).disabled = message.disableArray[i];
+                        document.getElementById(`receive${buttonIDs[i]}button`).disabled = message.disableArray[i];
                     }
                 }
             } else if (message.type === 'disableBusinessGiveButtons') {

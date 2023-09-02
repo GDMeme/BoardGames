@@ -90,7 +90,7 @@ export function sendWebsocketEveryone(roomIndex, messageObj) {
 
 function validReceiveIndex(game, receiveIndex) {
     let targetPlayerIndex = game.businessTargetPlayerIndex;
-    return !(targetPlayerIndex === -1 || game.players[targetPlayerIndex].establishments[receiveIndex] === 0 || targetPlayerIndex === playerCounter);
+    return !(targetPlayerIndex === -1 || game.players[targetPlayerIndex].establishments[receiveIndex] === 0 || targetPlayerIndex === game.playerCounter);
 }
 
 function validGiveIndex(game, giveIndex) {
@@ -115,7 +115,7 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
 
     // * * Update every client's HTML
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerCounter: playerCounter, yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
+        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
     }
 
     // * * Update game state
@@ -212,12 +212,11 @@ wss.on('connection', function (ws) {
             if (message.indexToKick < 0 || message.indexToKick > rooms[roomIndex].length - 3 || ws !== rooms[roomIndex][1]) { // verify that indexToKick is a valid number and that they are the host
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                // they are removed from rooms when removePlayer is received
-                rooms[roomIndex][message.indexToKick + 2].send(JSON.stringify({type: 'kickedPlayer'})); // add 2 because ignore the first element and the host spot
-                
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
                     rooms[roomIndex][i].send(JSON.stringify({type: 'kickMessage', kickedName: WStoPlayerName.get(rooms[roomIndex][message.indexToKick + 2]), kicked: i === message.indexToKick + 2}));
                 }
+                // they are removed from rooms when removePlayer is received
+                rooms[roomIndex][message.indexToKick + 2].send(JSON.stringify({type: 'kickedPlayer'})); // add 2 because ignore the first element and the host spot
             }
         } else if (message.type === 'endTurn') {
             let roomIndex = findRoomIndex(message.roomID);
