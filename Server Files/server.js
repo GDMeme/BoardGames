@@ -331,7 +331,7 @@ wss.on('connection', function (ws) {
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.TVStationActivatedState !== C.purpleState.activated || message.targetIndex - 1 === playerCounter || message.targetIndex < 1 || message.targetIndex > rooms[roomIndex].length - 1) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                let numberOfCoins = exchangeCoins(currentPlayer, game.players[message.targetIndex - 1], 5); // since targetIndex is not 0 indexed
+                let numberOfCoins = exchangeCoins(game.players[playerCounter], game.players[message.targetIndex - 1], 5); // since targetIndex is not 0 indexed
                 purpleIncome[playerCounter] += numberOfCoins;
                 purpleIncome[message.targetIndex - 1] -= numberOfCoins; // since i is not 0 indexed
                 
