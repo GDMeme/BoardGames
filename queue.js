@@ -332,6 +332,7 @@ export function queue(name) {
             } else if (message.type === 'yourTurn') {
                 playerTurnLayout(message.rollTwoDice, ws, currentRoomID);
             } else if (message.type === 'rolledDice') {
+                document.getElementById('rollnumber').style.display = "block";
                 document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerCounter + 1} rolled a ${message.roll} </u>`;
                 if (message.yourTurn) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
@@ -534,7 +535,7 @@ function updateBalances(playerBalances) {
 
 function connect() {
     return new Promise(function(resolve, reject) {
-        var ws = new WebSocket('wss://8.tcp.ngrok.io:16216');
+        var ws = new WebSocket('wss://0.tcp.ngrok.io:18468');
         document.getElementById('connectionfailed').style.display = "none";
         document.getElementById('loader').style.display = "inline";
         document.getElementById('waitingforserver').style.display = "block";
