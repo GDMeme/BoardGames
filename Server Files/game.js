@@ -3,7 +3,7 @@ export class Game {
         this.players; // array containing Player objects 
         this.playerCounter = 0; // * * playerCounter is 0 indexed!!
         this.ID;
-        this.name
+        this.name;
         this.numberOfPlayers;
 
         this.state = 0;

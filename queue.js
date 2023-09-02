@@ -316,7 +316,6 @@ export function queue(name) {
                 document.getElementById('tvplayertextbuttons').style.display = "none";
                 document.getElementById('businesstext').style.display = "none";
                 document.getElementById('incomesummary').style.display = "none";
-                console.log('message.yourturn', message.yourTurn);
                 if (message.yourTurn) {
                     document.getElementById('endturn').style.display = "none";
                     document.getElementById('endturn').disabled = true;
@@ -343,7 +342,6 @@ export function queue(name) {
             } else if (message.type === 'boughtEstablishment') {
                 const { name, displayName } = C.buildings[message.shopIndex];
                 document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${message.quantity}`;
-                console.log('newbalance', message.newBalance);
                 document.querySelector(`#balance${message.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'boughtLandmark') {
                 const { name, displayName } = C.buildings[message.shopIndex];
@@ -362,14 +360,14 @@ export function queue(name) {
                 document.getElementById('endturnbutton').disabled = true;
                 document.getElementById(`tvplayer${message.playerCounter + 1}button`).disabled = true; // disable taking 5 coins from yourself
             } else if (message.type === 'showFinishedTVText') {
-                if (yourTurn) {
+                if (message.yourTurn) {
                     document.getElementById('endturnbutton').disabled = false;
                     document.getElementById('tvplayerbuttons').style.display = "none";
-                    document.getElementById(`tvplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
+                    document.getElementById(`tvplayer${message.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
                     document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins (verified on server)
                 }
                 document.getElementById('incomesummary').style.display = "inline";
-                document.querySelector('#tvplayertext').innerHTML = `<div>${message.receiverName} received ${message.amount} coins.</div> <div>Player ${message.giverName} lost ${message.amount} coins.</div>`;
+                document.querySelector('#tvplayertext').innerHTML = `<div>${message.receiverName} received ${message.amount} coins.</div> <div>${message.giverName} lost ${message.amount} coins.</div>`;
                 updateBalances(message.playerBalances);
             } else if (message.type === 'showBusinessText') {
                 document.getElementById('endturnbutton').disabled = true;
@@ -401,18 +399,19 @@ export function queue(name) {
                 // * * Disable give establishment buttons that you do not have
                 for (let i = 0; i < 15; i++) {
                     if (i !== 6 && i !== 7 && i !== 8) {
-                        document.getElementById(`give${displayNames[i]}button`).disabled = message.disableArray[i];
+                        document.getElementById(`give${buttonIDs[i]}button`).disabled = message.disableArray[i];
                     }
                 }
             } else if (message.type === 'updateEstablishments') {
                 // * * The "receive" establishment    
-                document.querySelector(`#${displayNames[message.receiveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveGiveAmount}`;
-                document.querySelector(`#${displayNames[message.receiveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveReceiveAmount}`;
+                document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveGiveAmount}`;
+                document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveReceiveAmount}`;
                 
                 // * * The "give" establishment
-                document.querySelector(`#${displayNames[message.giveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveGiveAmount}`;
-                document.querySelector(`#${displayNames[message.giveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveReceiveAmount}`;
+                document.querySelector(`#${buttonIDs[message.giveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveGiveAmount}`;
+                document.querySelector(`#${buttonIDs[message.giveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveReceiveAmount}`;
                 
+                console.log('message.yourTurn', message.yourTurn)
                 if (message.yourTurn) {
                     document.getElementById('businesstext3').style.display = "none";
 
@@ -422,12 +421,12 @@ export function queue(name) {
                     document.getElementById('buysomething').style.display = "inline";
                     enableShop(message.players, message.playerCounter);
 
-                    document.getElementById(`businessplayer${game.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
+                    document.getElementById(`businessplayer${message.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
 
                     // text for what establishments were traded
                     document.getElementById('businesstext').style.display = "inline";
-                    document.querySelector('#businesstext4').innerHTML = `Player ${game.playerCounter + 1} received ${displayNames[receiveIndex]} and lost ${displayNames[giveIndex]}.`;
-                    document.querySelector('#businesstext5').innerHTML = `Player ${targetPlayerIndex + 1} lost ${displayNames[receiveIndex]} and received ${displayNames[giveIndex]}.`;
+                    document.querySelector('#businesstext4').innerHTML = `${message.players[message.receivePlayerIndex].name} received ${displayNames[message.receiveIndex]} and lost ${displayNames[message.giveIndex]}.`;
+                    document.querySelector('#businesstext5').innerHTML = `${message.players[message.givePlayerIndex].name} lost ${displayNames[message.receiveIndex]} and received ${displayNames[message.giveIndex]}.`;
 
                     document.getElementById('endturnbutton').disabled = false;
                 }
@@ -528,6 +527,7 @@ function sendMessage(message) {
 }
 
 function updateBalances(playerBalances) {
+    console.log(playerBalances);
     for (let i = 0; i < numberOfPlayers; i++) {
         document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${playerBalances[i]}</font>`;
     }

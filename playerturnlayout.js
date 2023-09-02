@@ -2,6 +2,7 @@ export function playerTurnLayout(rollTwoDice, ws, roomID) {
     document.getElementById('rolldicetext').style.display = "block";
     document.getElementById('rolldice').style.display = "block";
     document.getElementById('endturn').style.display = "block";
+    document.getElementById('rollnumber').style.display = "none";
 
     // * * Check Train Station
     document.getElementById('roll2dicecheckbox').disabled = !rollTwoDice;

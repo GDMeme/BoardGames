@@ -94,7 +94,7 @@ function validReceiveIndex(game, receiveIndex) {
 }
 
 function validGiveIndex(game, giveIndex) {
-    return game.players[playerCounter].establishments[giveIndex] !== 0;
+    return game.players[game.playerCounter].establishments[giveIndex] !== 0;
 }
 
 function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, playerCounter) { // was verified earlier that the player is able to reroll (if they did)
@@ -112,6 +112,9 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
         }
         roll += secondRoll;
     }
+
+    // TODO: Remove this
+    roll = 6;
 
     // * * Update every client's HTML
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
@@ -332,19 +335,17 @@ wss.on('connection', function (ws) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 let numberOfCoins = exchangeCoins(game.players[playerCounter], game.players[message.targetIndex - 1], 5); // since targetIndex is not 0 indexed
-                purpleIncome[playerCounter] += numberOfCoins;
-                purpleIncome[message.targetIndex - 1] -= numberOfCoins; // since i is not 0 indexed
                 
                 // * * Update TVStationActivated state
                 game.TVStationActivatedState = C.purpleState.activateFinish;
                 
                 // * * Update player balances on each client
-                let playerBalances = game.players.map(elem => elem.balance).splice(0, 1); // remove the 0th index (the game);
+                let playerBalances = game.players.map(elem => elem.balance);
 
                 // * * targetIndex starts at 1
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
                     // * * targetIndex starts at 1
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'showFinishedTVText', yourTurn: i === playerCounter + 1, playerCounter: playerCounter, playerBalances: playerBalances, amount: numberOfCoins, receiverName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), giverName: WStoPlayerName.get(rooms[roomIndex][message.targetIndex])}));
                 }
             }
         } else if (message.type === 'businessActivate') {
