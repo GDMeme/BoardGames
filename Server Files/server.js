@@ -110,15 +110,12 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
         if (roll === secondRoll) {
             doubles = true;
         }
-        roll += secondRoll;
+        roll = [roll, secondRoll];
     }
-
-    // TODO: Remove this
-    roll = 6;
 
     // * * Update every client's HTML
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
+        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', reroll: reroll, anotherTurn: doubles && rooms[roomIndex][playerCounter + 1].landmarks[2], roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
     }
 
     // * * Update game state
@@ -145,8 +142,12 @@ wss.on('connection', function (ws) {
             ws.send(JSON.stringify({type: 'niceTry'}));
         }
         if (message.type === 'setPlayerName') {
-            // TODO: Server should verify that they have not already set their name (unless they are changing it)
-            WStoPlayerName.set(ws, message.name);
+            // TODO: Add feature to change your player name
+            if (WStoPlayerName.get(ws) !== undefined) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                WStoPlayerName.set(ws, message.name);
+            }
         } else if (message.type === 'message') {
             let roomIndex = findRoomIndex(message.roomID);
             if (!rooms[roomIndex].includes(ws)) {

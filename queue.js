@@ -191,17 +191,6 @@ export function queue(name) {
         // * * Set up reroll button
         document.getElementById('rerollbutton').onclick = function () {
             ws.send(JSON.stringify({type: 'rerollDice', roomID: currentRoomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
-
-            // TODO: Put this stuff when you receive the message back that the reroll was valid
-            document.getElementById('rerollbutton').disabled = true;
-            document.getElementById('rolldoubles').style.display = "none";
-    
-            // subtract the income they got from the original roll
-
-            updateBalances(game.players);
-    
-            game.playerCounter = endTurn(game, true); // true means player rerolled
-            playerTurnLayout(game, false);
         }
 
         // Listen for messages
@@ -289,6 +278,7 @@ export function queue(name) {
             } else if (message.type === 'goBack') {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
+                document.querySelector('#playerturntext').innerHTML = `${message.playerNames[0]}'s turn!`;
                 numberOfPlayers = document.getElementById('playerlist').children.length - 1;
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`player${i + 1}text`).innerHTML = `<u>${message.playerNames[i]}</u>`;
@@ -332,13 +322,21 @@ export function queue(name) {
                 playerTurnLayout(message.rollTwoDice, ws, currentRoomID);
             } else if (message.type === 'rolledDice') {
                 document.getElementById('rollnumber').style.display = "block";
-                document.querySelector('#rollnumber').innerHTML = `<u> ${message.yourTurn ? 'You' : message.playerName} rolled a ${message.roll}! </u>`;
+                document.getElementById('rolldoubles').style.display = "none";
+                document.querySelector('#rollnumber').innerHTML = `<u>${message.yourTurn ? 'You' : message.playerName} rolled a ${Array.isArray(message.roll) ? `${message.roll[0]} + ${message.roll[1]} = ${message.roll[0] + message.roll[1]}` : message.roll}!</u>`;
                 if (message.yourTurn) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
                     document.getElementById('roll2dicecheckbox').disabled = !(message.trainStation && message.ableToReroll); // able to roll two dice if rerolling, radio tower and train station
                     document.getElementById('rerollbutton').disabled = !message.ableToReroll;
                 }
+                // TODO: Tell the other players that this guy rolled doubles and has amusement park
+                document.getElementById('rerollbutton').disabled = message.reroll;
+                if (message.anotherTurn) {
+                    document.getElementById('rolldoubles').style.display = "block";
+                    document.querySelector('#rolldoubles').innerHTML = `${yourTurn ? 'You' : message.playerName} rolled doubles! Take another turn!`
+                }
+
             } else if (message.type === 'boughtEstablishment') {
                 const { name, displayName } = C.buildings[message.shopIndex];
                 document.querySelector(`#${name}${message.playerCounter + 1}`).innerHTML = `${displayName}: ${message.quantity}`;
@@ -535,7 +533,7 @@ function updateBalances(playerBalances) {
 
 function connect() {
     return new Promise(function(resolve, reject) {
-        var ws = new WebSocket('wss://0.tcp.ngrok.io:18468');
+        var ws = new WebSocket('wss://localhost:8080');
         document.getElementById('connectionfailed').style.display = "none";
         document.getElementById('loader').style.display = "inline";
         document.getElementById('waitingforserver').style.display = "block";
@@ -558,7 +556,3 @@ function connect() {
 document.getElementById('tryconnectagain').onclick = function() {
     queue(playerName);
 }
-
-// TODO: run start() once a "start game" button is pressed
-
-// TODO: UID only needs to be known server-side, must send websocket with every message (this is the identifying factor)
