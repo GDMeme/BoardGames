@@ -79,7 +79,7 @@ function maximumEstablishments(players, index) { // * * Note: This doesn't accou
     for (let i = 0; i < players.length; i++) {
         sum += players[i].establishments[index];
     }
-    return (index === 0 || index === 2) ? sum === 8 : sum === 6; // start with 1 wheat field and 1 bakery
+    return (index === 0 || index === 2) ? sum === 6 + players.length : sum === 6; // start with 1 wheat field and 1 bakery
 }
 
 export function sendWebsocketEveryone(roomIndex, messageObj) {
