@@ -251,15 +251,14 @@ wss.on('connection', function (ws) {
                     game.playerCounter = 0;
                 }
 
-                // * * Update clients' HTML and tell next player it's their turn
-                console.log('game.playercounter', game.playerCounter);
+                // * * Update clients' HTML
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
                     rooms[roomIndex][i].send(JSON.stringify({type: 'endedTurn', rollTwoDice: game.players[game.playerCounter].landmarks[0], nextPlayerName: WStoPlayerName.get(rooms[roomIndex][game.playerCounter + 1]), yourTurn: (i === game.playerCounter) || (i === game.playerCounter + game.numberOfPlayers)}));
                 }
 
                 // * * Enable the save game button
                 rooms[roomIndex][1].send(JSON.stringify({type: 'enableSaveGame'}));
-                
+
                 // * * Tell the next player it's their turn
                 rooms[roomIndex][game.playerCounter + 1].send(JSON.stringify({type: 'yourTurn', rollTwoDice: game.players[game.playerCounter].landmarks[0]}));
                 }
@@ -274,7 +273,7 @@ wss.on('connection', function (ws) {
             } else {
                 roll(roomIndex, message.rollTwoDice, false, game.players[playerCounter].landmarks[0], game.players[playerCounter].landmarks[3], game, playerCounter);
             }
-        } else if (message.type === 'rerollDice') {
+        } else if (message.type === 'updateBalanceReroll') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
@@ -296,10 +295,15 @@ wss.on('connection', function (ws) {
 
                 // * * Send message to every client to update balances
                 sendWebsocketEveryone(roomIndex, {type: 'updateBalances', newBalances: game.players.map(elem => elem.balance)});
-
-                // * * Roll the dice again!
-                roll(roomIndex, message.rollTwoDice, true, game.players[playerCounter].landmarks[0], game.players[playerCounter].landmarks[3], game, playerCounter);
             }
+        } else if (message.type === 'rerollDice') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+            let playerCounter = game.playerCounter;
+
+            // * * Verified earlier, don't need to verify again
+            // * * Roll the dice again!
+            roll(roomIndex, message.rollTwoDice, true, game.players[playerCounter].landmarks[0], game.players[playerCounter].landmarks[3], game, playerCounter);
         } else if (message.type === 'buySomething') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];

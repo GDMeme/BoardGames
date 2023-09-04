@@ -305,7 +305,6 @@ export function queue(name) {
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
             } else if (message.type === 'endedTurn') {
-                console.log('message.yourTurn', message.yourTurn);
                 document.querySelector('#playerturntext').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
@@ -331,7 +330,6 @@ export function queue(name) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
                     document.getElementById('roll2dicecheckbox').disabled = !(message.trainStation && message.ableToReroll); // able to roll two dice if rerolling, radio tower and train station
-                    console.log(message.ableToReroll);
                     document.getElementById('rerollbutton').disabled = !message.ableToReroll;
                 }
                 // TODO: Tell the other players that this guy rolled doubles and has amusement park
@@ -412,7 +410,6 @@ export function queue(name) {
                 document.querySelector(`#${buttonIDs[message.giveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveGiveAmount}`;
                 document.querySelector(`#${buttonIDs[message.giveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveReceiveAmount}`;
                 
-                console.log('message.yourTurn', message.yourTurn)
                 if (message.yourTurn) {
                     document.getElementById('businesstext3').style.display = "none";
 
@@ -528,6 +525,7 @@ function sendMessage(message) {
 }
 
 function updateBalances(playerBalances) {
+    console.log('newplayerbalances', playerBalances);
     for (let i = 0; i < numberOfPlayers; i++) {
         document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${playerBalances[i]}</font>`;
     }
@@ -541,6 +539,10 @@ function rollLayout(reroll) {
     
     // rolling stuff
     document.getElementById('rollnumber').style.display = "inline";
+
+    if (reroll) {
+        ws.send(JSON.stringify({type: 'updateBalanceReroll', roomID: currentRoomID}));
+    }
 
     // * * Client side rolling until the actual roll is sent back
     let tempFirst = Math.floor(Math.random() * 6 + 1);
