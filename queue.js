@@ -1,7 +1,8 @@
 import { startGameLayout } from './startgamelayout.js';
-import { playerTurnLayout } from './playerturnlayout.js';
 import { enableShop } from './shop.js';
 import { end } from './end.js';
+import { startTurnLayout } from './startTurnLayout.js';
+import { endTurnLayout } from './endturnlayout.js';
 
 import * as C from './constants.js';
 
@@ -42,6 +43,8 @@ const buttonIDs = C.buildings.map(building => building.name);
 // TODO: income summary text spacing is not right
 
 // TODO: income summary shows 'player 1' instead of the actual player's name
+
+// TODO: If player name ends with 's', don't include the extra s after the apostrophe for the text for whose turn it is
 
 export function queue(name) {   
     playerName = name;
@@ -190,7 +193,12 @@ export function queue(name) {
 
         // * * Set up reroll button
         document.getElementById('rerollbutton').onclick = function () {
-            ws.send(JSON.stringify({type: 'rerollDice', roomID: currentRoomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
+            startTurnLayout(false); // just to disable the button
+            rollLayout(true);
+        }
+
+        document.getElementById('rolldicebutton').onclick = function () {
+            rollLayout(false);
         }
 
         // Listen for messages
@@ -290,13 +298,14 @@ export function queue(name) {
                     // * * Only the host can save game
                     document.getElementById('savegame').style.display = "block";
 
-                    playerTurnLayout(false, ws, currentRoomID); // TODO: If they loaded a game, this might not always be false
+                    startTurnLayout(false); // TODO: If they loaded a game, this might not always be false
                 }
             } else if (message.type === 'kickedPlayer') {
                 document.getElementById('goback').click();
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
             } else if (message.type === 'endedTurn') {
+                console.log('message.yourTurn', message.yourTurn);
                 document.querySelector('#playerturntext').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
@@ -306,20 +315,14 @@ export function queue(name) {
                 document.getElementById('tvplayertextbuttons').style.display = "none";
                 document.getElementById('businesstext').style.display = "none";
                 document.getElementById('incomesummary').style.display = "none";
+                document.getElementById('buysomething').style.display = "none";
+                document.getElementById('rolldicetext').style.display = "none";
+                document.getElementById('rollnumber').style.display = "none";
                 if (message.yourTurn) {
-                    document.getElementById('endturn').style.display = "none";
-                    document.getElementById('endturn').disabled = true;
-                    document.getElementById('rolldicetext').style.display = "none";
-                    document.getElementById('rolldicebutton').disabled = false;
-                    document.getElementById('endturnbutton').disabled = true;
-                    document.getElementById('rollnumber').style.display = "none";
-                    document.getElementById('roll2dicecheckbox').checked = false;
-                    document.getElementById('buysomething').style.display = "none";
-                    document.getElementById('rolldoubles').style.display = "none";
-                    document.getElementById('roll2dicecheckbox').style.display = "inline";
+                    endTurnLayout();
                 }
             } else if (message.type === 'yourTurn') {
-                playerTurnLayout(message.rollTwoDice, ws, currentRoomID);
+                startTurnLayout(message.rollTwoDice); 
             } else if (message.type === 'rolledDice') {
                 document.getElementById('rollnumber').style.display = "block";
                 document.getElementById('rolldoubles').style.display = "none";
@@ -328,10 +331,10 @@ export function queue(name) {
                     document.getElementById('endturnbutton').disabled = false; // enable the end turn button
         
                     document.getElementById('roll2dicecheckbox').disabled = !(message.trainStation && message.ableToReroll); // able to roll two dice if rerolling, radio tower and train station
+                    console.log(message.ableToReroll);
                     document.getElementById('rerollbutton').disabled = !message.ableToReroll;
                 }
                 // TODO: Tell the other players that this guy rolled doubles and has amusement park
-                document.getElementById('rerollbutton').disabled = message.reroll;
                 if (message.anotherTurn) {
                     document.getElementById('rolldoubles').style.display = "block";
                     document.querySelector('#rolldoubles').innerHTML = `${yourTurn ? 'You' : message.playerName} rolled doubles! Take another turn!`
@@ -525,9 +528,47 @@ function sendMessage(message) {
 }
 
 function updateBalances(playerBalances) {
-    console.log(playerBalances);
     for (let i = 0; i < numberOfPlayers; i++) {
         document.querySelector(`#balance${i + 1}`).innerHTML = `<font size="5">Balance: ${playerBalances[i]}</font>`;
+    }
+}
+
+function rollLayout(reroll) {
+    document.getElementById('rolldice').style.display = "none";
+
+    document.getElementById('savegametext').style.display = "none";
+    document.getElementById('savegamebutton').disabled = true; // disable the save game button 
+    
+    // rolling stuff
+    document.getElementById('rollnumber').style.display = "inline";
+
+    // * * Client side rolling until the actual roll is sent back
+    let tempFirst = Math.floor(Math.random() * 6 + 1);
+    let tempSecond = Math.floor(Math.random() * 6 + 1);
+    document.querySelector('#rollnumber').innerHTML = document.getElementById('roll2dicecheckbox').checked ? `<u> You rolled a ${tempFirst} + ${tempSecond} = ${tempFirst + tempSecond}! </u>` : `<u> You rolled a ${tempFirst}! </u>`;
+    return setTimeout(rollDice, 100, document.getElementById('roll2dicecheckbox').checked, 0, ws, reroll);
+}
+
+function rollDice(rollTwoDice, counter, ws, reroll) {
+    let newRollNumber;
+    if (counter !== 10) {
+        counter++;
+        if (rollTwoDice) {
+            let firstRoll = Math.floor(Math.random() * 6 + 1);
+            let secondRoll = Math.floor(Math.random() * 6 + 1);
+            newRollNumber = firstRoll + secondRoll;
+            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${firstRoll} + ${secondRoll} = ${newRollNumber}! </u>`;
+        } else {
+            newRollNumber = Math.floor(Math.random() * 6 + 1);
+            document.querySelector('#rollnumber').innerHTML = `<u> You rolled a ${newRollNumber}! </u>`;
+        }
+        setTimeout(rollDice, counter !== 10 ? 100 : 0, rollTwoDice, counter, ws, reroll); // poll until counter reaches 10
+    } else {
+        if (!reroll) {
+            ws.send(JSON.stringify({type: 'rollDice', roomID: currentRoomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
+        } else {
+            ws.send(JSON.stringify({type: 'rerollDice', roomID: currentRoomID, rollTwoDice: document.getElementById('roll2dicecheckbox').checked}));
+        }
     }
 }
 

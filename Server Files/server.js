@@ -251,17 +251,18 @@ wss.on('connection', function (ws) {
                     game.playerCounter = 0;
                 }
 
-                // * * Update clients' HTML
+                // * * Update clients' HTML and tell next player it's their turn
+                console.log('game.playercounter', game.playerCounter);
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
-                    rooms[roomIndex][i].send(JSON.stringify({type: 'endedTurn', nextPlayerName: WStoPlayerName.get(rooms[roomIndex][game.playerCounter + 1]), yourTurn: (i === game.playerCounter) || (i === game.playerCounter + game.numberOfPlayers)}));
+                    rooms[roomIndex][i].send(JSON.stringify({type: 'endedTurn', rollTwoDice: game.players[game.playerCounter].landmarks[0], nextPlayerName: WStoPlayerName.get(rooms[roomIndex][game.playerCounter + 1]), yourTurn: (i === game.playerCounter) || (i === game.playerCounter + game.numberOfPlayers)}));
                 }
 
                 // * * Enable the save game button
                 rooms[roomIndex][1].send(JSON.stringify({type: 'enableSaveGame'}));
-
+                
                 // * * Tell the next player it's their turn
                 rooms[roomIndex][game.playerCounter + 1].send(JSON.stringify({type: 'yourTurn', rollTwoDice: game.players[game.playerCounter].landmarks[0]}));
-            }
+                }
         } else if (message.type === 'rollDice') {
             let roomIndex = findRoomIndex(message.roomID);
             let game = rooms[roomIndex][0];
