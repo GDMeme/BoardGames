@@ -63,4 +63,26 @@ export function startGameLayout(numberOfPlayers) { // existingGame could also re
             }
         }
     }
+
+    // * * When hovering over the buttons, show the image as well
+    // * * Will always show the unlocked version for landmarks
+    for (let j = 0; j < 19; j++) {
+        document.getElementById(`buy${buttonIDs[j]}button`).onmouseout = function () {
+            document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? 'locked' : ''}image`).style.display = "none"
+            document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? 'unlocked' : ''}image`).style.display = "none";
+            document.getElementById('cardexplanation').style.display = "none";
+            document.getElementById('cardexplanation2').style.display = "none";
+            document.getElementById('dicerollexplanation').style.display = "none";
+        }
+        document.getElementById(`buy${buttonIDs[j]}button`).onmouseover = function () {
+            document.getElementById('hovertip').style.display = "none";
+
+            document.getElementById(`${buttonIDs[j]}${(j < 19 && j > 14) ? 'unlocked' : ''}image`).style.display = "inline";
+            document.getElementById('cardexplanation').style.display = "flex";
+            document.getElementById('cardexplanation2').style.display = "flex";
+            document.getElementById('dicerollexplanation').style.display = j > 14 ? "none" : "flex";
+            document.getElementById('extraindent').style.display = j > 14 ? "flex" : "none";
+            document.getElementById('imgWrap').style.margin = '0px ' + (document.getElementById('incomesummary').style.display === "inline" ? (j < 15 ? '-90px' : '-36px') : (j < 15 ? '-195px' : '-141px'));
+        }
+    }
 }
