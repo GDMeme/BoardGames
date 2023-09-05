@@ -14,6 +14,14 @@ document.getElementById('closemessagebutton').onclick = function() {
     document.getElementById('chat').style.display = "none";
 }
 
+document.getElementById('closechat').onmouseover = function () {
+    document.getElementById('closechat').style.cursor = "pointer";
+}
+
+document.getElementById('closechat').onclick = function() {
+    document.getElementById('chat').style.display = "none";
+}
+
 // * * Starting the game
 let playerName;
 

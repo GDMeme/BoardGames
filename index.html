@@ -18,8 +18,11 @@
         <button class="openchat" id="openchatbutton" style="display: none">Chat</button>
         <div class="chatpopup" id="chat" style="text-align: left;">
             <div class="form-container">
-                <h1>Chat</h1>
+                <h1 style="display: inline">Chat</h1>
 
+                <span id="closechat" style="float: right; margin-right: 15px; margin-top: 5px">x</span>
+
+                <br>
                 <label for="sendmessage"><u>Chat History</u></label>
                 <textarea id="chathistory" disabled></textarea>
                 <input type="text" id="sendmessage" style="position: absolute; bottom: 90px; right: 10px; width: 280px" placeholder='Press "Enter" to send a message...'>
