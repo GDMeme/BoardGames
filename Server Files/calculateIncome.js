@@ -132,13 +132,13 @@ export function calculateIncome(roll, game, room, WStoPlayerName, roomIndex) { /
     // red income text
     if (!redIncome.every(income => income === 0)) {
         // * * Show red income text for each client's HTML
-        sendWebsocketEveryone(roomIndex, {type: 'showRedIncome', redIncome: redIncome});
+        sendWebsocketEveryone(roomIndex, {type: 'showRedIncome', redIncome: redIncome, players: game.players});
     }
 
     // green/blue income text
     if (!greenBlueIncome.every(income => income === 0)) {
         // * * Show green/blue income text for each client's HTML
-        sendWebsocketEveryone(roomIndex, {type: 'showGreenBlueIncome', greenBlueIncome: greenBlueIncome});
+        sendWebsocketEveryone(roomIndex, {type: 'showGreenBlueIncome', greenBlueIncome: greenBlueIncome, players: game.players});
     }
     
     let totalIncome = Array(game.players.length);

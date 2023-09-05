@@ -34,17 +34,9 @@ const buttonIDs = C.buildings.map(building => building.name);
 
 
 // * * GAMEPLAY STUFF
-// TODO: Make sure UI recognizes that you are not able to buy something while TV Station is activated
-
 // TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
 
-// TODO: x at the top right of the chat to close it
-
-// TODO: income summary text spacing is not right
-
-// TODO: income summary shows 'player 1' instead of the actual player's name
-
-// TODO: If player name ends with 's', don't include the extra s after the apostrophe for the text for whose turn it is
+// TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
 
 export function queue(name) {   
     playerName = name;
@@ -78,7 +70,7 @@ export function queue(name) {
 
             document.getElementById('startgame').style.display = "inline";
             host = true;
-            let roomName = document.getElementById('roomnameinput').value || `${playerName}'s Room`;
+            let roomName = document.getElementById('roomnameinput').value || `${playerName}'${playerName.slice(-1) === 's' ? '' : 's'} Room`;
             document.querySelector('#roomnamelabel').innerHTML = `Room Name: ${roomName}`;
             document.getElementById('roomnamelabel').style.display = "inline";
             ws.send(JSON.stringify({type: 'createRoom', roomName: roomName}));
@@ -290,7 +282,7 @@ export function queue(name) {
             } else if (message.type === 'goBack') {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
-                document.querySelector('#playerturntext').innerHTML = `${message.playerNames[0]}'s turn!`;
+                document.querySelector('#playerturntext').innerHTML = `${message.playerNames[0]}'${message.playerNames[0].slice(-1) === 's' ? '' : 's'} turn!`;
                 numberOfPlayers = document.getElementById('playerlist').children.length - 1;
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`player${i + 1}text`).innerHTML = `<u>${message.playerNames[i]}</u>`;
@@ -309,7 +301,7 @@ export function queue(name) {
             } else if (message.type === 'kickMessage') {
                 sendMessage(`${message.kicked ? 'You were' : `${message.kickedName} was`} kicked from the room!`);
             } else if (message.type === 'endedTurn') {
-                document.querySelector('#playerturntext').innerHTML = `${message.nextPlayerName}'s turn!`; // since playerCounter is 0 indexed
+                document.querySelector('#playerturntext').innerHTML = `${message.nextPlayerName}'${message.nextPlayerName.slice(-1) === 's' ? '' : 's' } turn!`;
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`stadiumtext${i + 1}`).style.display = "none";
                     document.getElementById(`redincome${i + 1}`).style.display = "none";
@@ -406,6 +398,8 @@ export function queue(name) {
                     }
                 }
             } else if (message.type === 'updateEstablishments') {
+                document.getElementById('incomesummary').style.display = "block";
+
                 // * * The "receive" establishment    
                 document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveGiveAmount}`;
                 document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveReceiveAmount}`;
@@ -413,7 +407,12 @@ export function queue(name) {
                 // * * The "give" establishment
                 document.querySelector(`#${buttonIDs[message.giveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveGiveAmount}`;
                 document.querySelector(`#${buttonIDs[message.giveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveReceiveAmount}`;
-                
+
+                // text for what establishments were traded
+                document.getElementById('businesstext').style.display = "inline";
+                document.querySelector('#businesstext4').innerHTML = `${message.players[message.receivePlayerIndex].name} received ${displayNames[message.receiveIndex]} and lost ${displayNames[message.giveIndex]}.`;
+                document.querySelector('#businesstext5').innerHTML = `${message.players[message.givePlayerIndex].name} lost ${displayNames[message.receiveIndex]} and received ${displayNames[message.giveIndex]}.`;
+
                 if (message.yourTurn) {
                     document.getElementById('businesstext3').style.display = "none";
 
@@ -425,10 +424,7 @@ export function queue(name) {
 
                     document.getElementById(`businessplayer${message.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
 
-                    // text for what establishments were traded
-                    document.getElementById('businesstext').style.display = "inline";
-                    document.querySelector('#businesstext4').innerHTML = `${message.players[message.receivePlayerIndex].name} received ${displayNames[message.receiveIndex]} and lost ${displayNames[message.giveIndex]}.`;
-                    document.querySelector('#businesstext5').innerHTML = `${message.players[message.givePlayerIndex].name} lost ${displayNames[message.receiveIndex]} and received ${displayNames[message.giveIndex]}.`;
+
 
                     document.getElementById('endturnbutton').disabled = false;
                 }
@@ -437,12 +433,12 @@ export function queue(name) {
             } else if (message.type === 'showRedIncome') {
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`redincome${i + 1}`).style.display = message.redIncome[i] === 0 ? "none" : "flex";
-                    document.querySelector(`#redincome${i + 1}`).innerHTML = `Player ${i + 1} ${message.redIncome[i] > 0 ? 'received' : 'lost'} ${message.redIncome[i] > 0 ? message.redIncome[i] : -message.redIncome[i]} ${(message.redIncome[i] > 1 || message.redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
+                    document.querySelector(`#redincome${i + 1}`).innerHTML = `${message.players[i].name} ${message.redIncome[i] > 0 ? 'received' : 'lost'} ${message.redIncome[i] > 0 ? message.redIncome[i] : -message.redIncome[i]} ${(message.redIncome[i] > 1 || message.redIncome[i] < -1) ? 'coins' : 'coin'} from red establishments.`;
                 }
             } else if (message.type === 'showGreenBlueIncome') {      
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`greenblueincome${i + 1}`).style.display = message.greenBlueIncome[i] === 0 ? "none" : "flex";
-                    document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `Player ${i + 1} received ${message.greenBlueIncome[i]} ${(message.greenBlueIncome[i] > 1 || message.greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
+                    document.querySelector(`#greenblueincome${i + 1}`).innerHTML = `${message.players[i].name} received ${message.greenBlueIncome[i]} ${(message.greenBlueIncome[i] > 1 || message.greenBlueIncome[i] < -1) ? 'coins' : 'coin'} from green/blue establishments.`;
                 }
             } else if (message.type === 'incomeReceived') {
                 if (!message.income.every(income => income === 0)) {

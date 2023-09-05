@@ -123,7 +123,7 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
     game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName, roomIndex);
 
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-        rooms[roomIndex][i].send(JSON.stringify({type: 'incomeReceived', income: game.income, yourTurn: i === playerCounter + 1, players: game.players, playerCounter: playerCounter}));
+        rooms[roomIndex][i].send(JSON.stringify({type: 'incomeReceived', businessActivated: game.businessCenterActivatedState === C.purpleState.activated, income: game.income, yourTurn: i === playerCounter + 1, players: game.players, playerCounter: playerCounter}));
     }
 }
 
@@ -311,8 +311,7 @@ wss.on('connection', function (ws) {
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
             // * * You should be able to buy something while TV Station is activated
-            // TODO: You cannot buy something while business center is activated
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state !== C.state.rolledState || !validPurchase(game, playerCounter, message.shopIndex)) {
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state !== C.state.rolledState || (game.businessCenterActivatedState !== C.purpleState.didNotActivate && game.businessCenterActivatedState !== C.purpleState.activateFinish) || !validPurchase(game, playerCounter, message.shopIndex)) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 game.players[playerCounter].balance -= C.buildings[message.shopIndex].cost;
