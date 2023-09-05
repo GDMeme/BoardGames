@@ -22,11 +22,16 @@ export const buildings = [
 
 export const state = {
     newTurn: 0,
+    rolledState: 1,
+    bought: 2
+}
+
+export const rollState = {
+    didNotRoll: 0,
     rolled: 1,
     rolledDoubles: 2, // * * no reroll
     rerolled: 3, // * * no doubles
     rerolledDoubles: 4,
-    bought: 5
 }
 
 export const purpleState = {

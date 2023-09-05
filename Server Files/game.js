@@ -6,7 +6,11 @@ export class Game {
         this.name;
         this.numberOfPlayers;
 
+        this.anotherTurn = false;
+
         this.state = 0;
+        this.rollState;
+        this.justBoughtAmusement = false;
         this.TVStationActivatedState = 0; 
         this.businessCenterActivatedState = 0;
         this.businessTargetPlayerIndex = -1;

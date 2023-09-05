@@ -98,9 +98,6 @@ function validGiveIndex(game, giveIndex) {
 }
 
 function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, playerCounter) { // was verified earlier that the player is able to reroll (if they did)
-    // * * Disable the save game button
-    rooms[roomIndex][1].send(JSON.stringify({type: 'disableSaveGame'}))
-
     let doubles = false;
     let roll = Math.floor(Math.random() * 6 + 1);
 
@@ -115,11 +112,12 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
 
     // * * Update every client's HTML
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', reroll: reroll, anotherTurn: doubles && rooms[roomIndex][playerCounter + 1].landmarks[2], roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
+        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', reroll: reroll, anotherTurn: doubles && game.players[playerCounter].landmarks[2] && !game.justBoughtAmusement, roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
     }
 
     // * * Update game state
-    game.state = reroll ? (doubles ? C.state.rerolledDoubles : C.state.rerolled) : (doubles ? C.state.rolledDoubles : C.state.rolled);
+    game.state = C.state.rolledState;
+    game.rollState = reroll ? (doubles ? C.rollState.rerolledDoubles : C.rollState.rerolled) : (doubles ? C.rollState.rolledDoubles : C.rollState.rolled);
 
     // * * Calculate everyone's income
     game.income = calculateIncome(roll, game, rooms[roomIndex], WStoPlayerName, roomIndex);
@@ -231,9 +229,6 @@ wss.on('connection', function (ws) {
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.newTurn || !TVStationCheck || !businessCenterCheck) { // any other state is OK
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
-                // * * Update the game state
-                game.state = C.state.newTurn;
-
                 // * * Reset the purple establishment states
                 game.TVStationActivatedState = C.purpleState.didNotActivate;
                 game.businessCenterActivatedState = C.purpleState.didNotActivate;
@@ -244,12 +239,19 @@ wss.on('connection', function (ws) {
                 game.income = undefined;
 
                 // * * Update playerCounter (if applicable)
-                if (!(game.state === C.state.rolledDoubles || game.state === C.state.rerolledDoubles)) { // Amusement Park did not activate
+                if (!((game.rollState === C.rollState.rolledDoubles || game.rollState === C.rollState.rerolledDoubles) && !game.justBoughtAmusement && game.players[playerCounter].landmarks[2])) { // Amusement Park did not activate
                     game.playerCounter++;
                 }
                 if (game.playerCounter === game.numberOfPlayers) {
                     game.playerCounter = 0;
                 }
+
+                // * * Update the game state
+                game.state = C.state.newTurn;
+                game.rollState = C.rollState.didNotRoll;
+
+                // * * Reset justBoughtAmusement
+                game.justBoughtAmusement = false;
 
                 // * * Update clients' HTML
                 for (let i = 1; i < rooms[roomIndex].length; i++) {
@@ -278,7 +280,7 @@ wss.on('connection', function (ws) {
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
 
-            let alreadyRolled = (game.state === C.state.rolled) || (game.state === C.state.rolledDoubles);
+            let alreadyRolled = (game.rollState === C.rollState.rolled) || (game.rollState === C.rollState.rolledDoubles);
             let businessCenterCheck = (game.businessCenterActivatedState === C.purpleState.didNotActivate) || (game.businessCenterActivatedState === C.purpleState.activated);
             let TVStationCheck = (game.TVStationActivatedState === C.purpleState.didNotActivate) || (game.TVStationActivatedState === C.purpleState.activated);
             if (!verifyWebsocket(ws, roomIndex, playerCounter) || !alreadyRolled || !TVStationCheck || !businessCenterCheck || !game.players[playerCounter].landmarks[3]) {
@@ -301,7 +303,7 @@ wss.on('connection', function (ws) {
             let game = rooms[roomIndex][0];
             let playerCounter = game.playerCounter;
 
-            // * * Verified earlier, don't need to verify again
+            // TODO: verify game state before rerolling
             // * * Roll the dice again!
             roll(roomIndex, message.rollTwoDice, true, game.players[playerCounter].landmarks[0], game.players[playerCounter].landmarks[3], game, playerCounter);
         } else if (message.type === 'buySomething') {
@@ -310,7 +312,7 @@ wss.on('connection', function (ws) {
             let playerCounter = game.playerCounter;
             // * * You should be able to buy something while TV Station is activated
             // TODO: You cannot buy something while business center is activated
-            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state === C.state.bought || game.state === C.state.newTurn || !validPurchase(game, playerCounter, message.shopIndex)) {
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || game.state !== C.state.rolledState || !validPurchase(game, playerCounter, message.shopIndex)) {
                 ws.send(JSON.stringify({type: 'niceTry'}));
             } else {
                 game.players[playerCounter].balance -= C.buildings[message.shopIndex].cost;
@@ -324,6 +326,8 @@ wss.on('connection', function (ws) {
                     ws.send(JSON.stringify({type: 'boughtSomething'}));
                 } else { // bought a landmark
                     game.players[playerCounter].landmarks[message.shopIndex - 15] = true; 
+                    // * * Check if they just bought amusement park
+                    game.justBoughtAmusement = message.shopIndex === 17;
                     // TODO: Maybe a message saying that they bought a landmark even though they won?
                     if (game.players[playerCounter].landmarks.every(landmark => landmark === true)) { // Player wins!
                         sendWebsocketEveryone(roomIndex, {type: 'endGame', winnerIndex: playerCounter});
@@ -417,6 +421,11 @@ wss.on('connection', function (ws) {
 
                 // TODO: Send a message to everyone saying the game has been saved
             }
+        } else if (message.type === 'disableSaveButton') {
+            let roomIndex = findRoomIndex(message.roomID);
+
+            // * * Disable the save game button
+            rooms[roomIndex][1].send(JSON.stringify({type: 'disableSaveGame'}))
         }
     });
 

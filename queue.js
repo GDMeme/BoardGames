@@ -200,6 +200,10 @@ export function queue(name) {
         document.getElementById('rolldicebutton').onclick = function () {
             rollLayout(false);
         }
+        
+        document.getElementById('roll2dice').onclick = function() {
+            document.getElementById('roll2dicecheckbox').checked = !document.getElementById('roll2dicecheckbox').checked;
+        }
 
         // Listen for messages
         ws.addEventListener("message", (message) => {
@@ -335,7 +339,7 @@ export function queue(name) {
                 // TODO: Tell the other players that this guy rolled doubles and has amusement park
                 if (message.anotherTurn) {
                     document.getElementById('rolldoubles').style.display = "block";
-                    document.querySelector('#rolldoubles').innerHTML = `${yourTurn ? 'You' : message.playerName} rolled doubles! Take another turn!`
+                    document.querySelector('#rolldoubles').innerHTML = `${message.yourTurn ? 'You' : message.playerName} rolled doubles! Take another turn!`
                 }
 
             } else if (message.type === 'boughtEstablishment') {
@@ -533,6 +537,7 @@ function updateBalances(playerBalances) {
 
 function rollLayout(reroll) {
     document.getElementById('rolldice').style.display = "none";
+    document.getElementById('roll2dicecheckbox').disabled = true;
 
     document.getElementById('savegametext').style.display = "none";
     document.getElementById('savegamebutton').disabled = true; // disable the save game button 
@@ -543,6 +548,9 @@ function rollLayout(reroll) {
     if (reroll) {
         ws.send(JSON.stringify({type: 'updateBalanceReroll', roomID: currentRoomID}));
     }
+
+    // * * Disable the save button for the host    
+    ws.send(JSON.stringify({type: 'disableSaveButton', roomID: currentRoomID}));
 
     // * * Client side rolling until the actual roll is sent back
     let tempFirst = Math.floor(Math.random() * 6 + 1);
