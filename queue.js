@@ -1,6 +1,6 @@
 import { startGameLayout } from './startgamelayout.js';
 import { enableShop } from './shop.js';
-import { end } from './end.js';
+import { endGame } from './endGame.js';
 import { startTurnLayout } from './startTurnLayout.js';
 import { endTurnLayout } from './endturnlayout.js';
 
@@ -457,7 +457,7 @@ export function queue(name) {
                 document.getElementById('entiregame').style.display = "none";
 
                 // TODO: Make the end screen
-                end(message.winnerIndex);
+                endGame(message.winnerIndex);
             } else if (message.type === 'boughtSomething') {
                 // disable all shop buttons after buying something
                 document.querySelectorAll('.shop').forEach(button => button.disabled = true);
