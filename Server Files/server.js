@@ -425,6 +425,23 @@ wss.on('connection', function (ws) {
 
             // * * Disable the save game button
             rooms[roomIndex][1].send(JSON.stringify({type: 'disableSaveGame'}))
+        } else if (message.type === 'goBackBusiness') {
+            let roomIndex = findRoomIndex(message.roomID);
+            let game = rooms[roomIndex][0];
+
+            if (!verifyWebsocket(ws, roomIndex, playerCounter) || (game.businessCenterActivatedState !== C.purpleState.gotReceiveIndex) && (game.businessCenterActivatedState !== C.purpleState.gotPlayerIndex)) {
+                ws.send(JSON.stringify({type: 'niceTry'}));
+            } else {
+                if (game.businessCenterActivatedState === C.purpleState.gotReceiveIndex) {
+                    game.businessCenterActivatedState = C.purpleState.gotPlayerIndex;
+                    game.businessReceiveIndex = -1;
+                    ws.send(JSON.stringify({type: 'disableBusinessReceiveButtons', disableArray: game.players[game.businessTargetPlayerIndex].establishments.map(elem => elem === 0)}));
+                } else if (game.businessCenterActivatedState === C.purpleState.gotPlayerIndex) {
+                    game.businessCenterActivatedState = C.purpleState.activated;
+                    game.businessTargetPlayerIndex = -1;
+                    ws.send(JSON.stringify({type: 'showBusinessText', playerCounter: playerCounter}));
+                }
+            }
         }
     });
 

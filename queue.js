@@ -32,10 +32,9 @@ const buttonIDs = C.buildings.map(building => building.name);
 
 // TODO: Do something if player disconnects while in middle of a game
 
+// TODO: Fix all the divs with display: inline to display: block
 
 // * * GAMEPLAY STUFF
-// TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
-
 // TODO: When business center activates, should be able to go back and change who you want to trade with / what you want to receive
 
 export function queue(name) {   
@@ -195,6 +194,11 @@ export function queue(name) {
         
         document.getElementById('roll2dice').onclick = function() {
             document.getElementById('roll2dicecheckbox').checked = !document.getElementById('roll2dicecheckbox').checked;
+        }
+
+        // * * Allow the user to choose a different player to trade with/establishment to trade
+        document.getElementById('gobackbusiness').onclick = function() {
+            ws.send(JSON.stringify({type: 'goBackBusiness', roomID: currentRoomID}));
         }
 
         // Listen for messages
@@ -361,21 +365,25 @@ export function queue(name) {
                     document.getElementById(`tvplayer${message.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (taking 5 coins from yourself)
                     document.getElementById('rerollbutton').disabled = true; // disable rerolling after stealing 5 coins (verified on server)
                 }
-                document.getElementById('incomesummary').style.display = "inline";
+                document.getElementById('incomesummary').style.display = "block";
                 document.querySelector('#tvplayertext').innerHTML = `<div>${message.receiverName} received ${message.amount} coins.</div> <div>${message.giverName} lost ${message.amount} coins.</div>`;
                 updateBalances(message.playerBalances);
             } else if (message.type === 'showBusinessText') {
                 document.getElementById('endturnbutton').disabled = true;
                 document.getElementById(`businessplayer${message.playerCounter + 1}button`).disabled = true; // disable trading with yourself
             
-                document.getElementById('businessplayerbuttons').style.display = "inline";
-                document.getElementById('businesstext1').style.display = "inline";
+                document.getElementById('businessplayerbuttons').style.display = "block";
+                document.getElementById('businesstext1').style.display = "block";
+                document.getElementById('businesstext2').style.display = "none";
             } else if (message.type === 'disableBusinessReceiveButtons') {
+                document.getElementById('gobackbusiness').style.display = "none";
+
                 document.getElementById('businesstext1').style.display = "none";
-                document.getElementById('businesstext2').style.display = "inline";
+                document.getElementById('businesstext2').style.display = "block";
+                document.getElementById('businesstext3').style.display = "none";
                 document.getElementById('businessplayerbuttons').style.display = "none";
 
-                document.getElementById('receiveindex').style.display = "inline";
+                document.getElementById('receiveindex').style.display = "block";
 
                 document.getElementById('rerollbutton').disabled = true; // disable rerolling after choosing a player to trade with
                 
@@ -386,10 +394,12 @@ export function queue(name) {
                     }
                 }
             } else if (message.type === 'disableBusinessGiveButtons') {
+                document.getElementById('gobackbusiness').style.display = "block";
+
                 document.getElementById('businesstext2').style.display = "none";
-                document.getElementById('businesstext3').style.display = "inline";
+                document.getElementById('businesstext3').style.display = "block";
                 document.getElementById('receiveindex').style.display = "none";
-                document.getElementById('giveindex').style.display = "inline";
+                document.getElementById('giveindex').style.display = "block";
 
                 // * * Disable give establishment buttons that you do not have
                 for (let i = 0; i < 15; i++) {
@@ -400,6 +410,8 @@ export function queue(name) {
             } else if (message.type === 'updateEstablishments') {
                 document.getElementById('incomesummary').style.display = "block";
 
+                document.getElementById('gobackbusiness').style.display = "none";
+
                 // * * The "receive" establishment    
                 document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.givePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveGiveAmount}`;
                 document.querySelector(`#${buttonIDs[message.receiveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.receiveIndex]}: ${message.receiveReceiveAmount}`;
@@ -409,7 +421,7 @@ export function queue(name) {
                 document.querySelector(`#${buttonIDs[message.giveIndex]}${message.receivePlayerIndex + 1}`).innerHTML = `${displayNames[message.giveIndex]}: ${message.giveReceiveAmount}`;
 
                 // text for what establishments were traded
-                document.getElementById('businesstext').style.display = "inline";
+                document.getElementById('businesstext').style.display = "block";
                 document.querySelector('#businesstext4').innerHTML = `${message.players[message.receivePlayerIndex].name} received ${displayNames[message.receiveIndex]} and lost ${displayNames[message.giveIndex]}.`;
                 document.querySelector('#businesstext5').innerHTML = `${message.players[message.givePlayerIndex].name} lost ${displayNames[message.receiveIndex]} and received ${displayNames[message.giveIndex]}.`;
 
@@ -419,12 +431,10 @@ export function queue(name) {
                     document.getElementById('giveindex').style.display = "none";
 
                     // * * Enable shop buttons
-                    document.getElementById('buysomething').style.display = "inline";
+                    document.getElementById('buysomething').style.display = "block";
                     enableShop(message.players, message.playerCounter);
 
                     document.getElementById(`businessplayer${message.playerCounter + 1}button`).disabled = false; // enable the button that you disabled (trading with yourself)
-
-
 
                     document.getElementById('endturnbutton').disabled = false;
                 }
