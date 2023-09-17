@@ -287,6 +287,12 @@ export function queue(name) {
                 document.getElementById('goback').click();
             } else if (message.type === 'startGame') {
                 document.querySelector('#playerturntext').innerHTML = `${message.playerNames[0]}'${message.playerNames[0].slice(-1) === 's' ? '' : 's'} turn!`;
+
+                document.getElementById('tvplayer3button').style.display = numberOfPlayers > 2 ? "inline-block" : 'none';
+                document.getElementById('tvplayer4button').style.display = numberOfPlayers > 3 ? "inline-block" : 'none';
+                document.getElementById('businessplayer3button').style.display = numberOfPlayers > 2 ? "inline-block" : 'none';
+                document.getElementById('businessplayer4button').style.display = numberOfPlayers > 3 ? "inline-block" : 'none';
+
                 numberOfPlayers = document.getElementById('playerlist').children.length - 1;
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`player${i + 1}text`).innerHTML = `<u>${message.playerNames[i]}</u>`;
