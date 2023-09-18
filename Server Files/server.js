@@ -101,9 +101,16 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
     let doubles = false;
     let roll = Math.floor(Math.random() * 6 + 1);
 
+    // todo: remove this
+    roll = 6;
+
     // * * Roll two dice
     if (rollTwoDice) {
         let secondRoll = Math.floor(Math.random() * 6 + 1);
+
+        // todo: remove this
+        secondRoll = 6;
+
         if (roll === secondRoll) {
             doubles = true;
         }
@@ -112,7 +119,7 @@ function roll(roomIndex, rollTwoDice, reroll, trainStation, radioTower, game, pl
 
     // * * Update every client's HTML
     for (let i = 1; i < rooms[roomIndex].length; i++) { // just to update every client's HTML
-        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', reroll: reroll, anotherTurn: doubles && game.players[playerCounter].landmarks[2] && !game.justBoughtAmusement, roll: roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
+        rooms[roomIndex][i].send(JSON.stringify({type: 'rolledDice', reroll: reroll, anotherTurn: doubles && game.players[playerCounter].landmarks[2] && !game.justBoughtAmusement, roll: Array.isArray(roll) ? roll.reduce((a, c) => a + c) : roll, playerName: WStoPlayerName.get(rooms[roomIndex][playerCounter + 1]), yourTurn: i === playerCounter + 1, ableToReroll: !reroll && radioTower, trainStation: trainStation}));
     }
 
     // * * Update game state
