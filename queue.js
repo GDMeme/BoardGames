@@ -288,12 +288,13 @@ export function queue(name) {
             } else if (message.type === 'startGame') {
                 document.querySelector('#playerturntext').innerHTML = `${message.playerNames[0]}'${message.playerNames[0].slice(-1) === 's' ? '' : 's'} turn!`;
 
+                numberOfPlayers = document.getElementById('playerlist').children.length - 1;
+
                 document.getElementById('tvplayer3button').style.display = numberOfPlayers > 2 ? "inline-block" : 'none';
                 document.getElementById('tvplayer4button').style.display = numberOfPlayers > 3 ? "inline-block" : 'none';
                 document.getElementById('businessplayer3button').style.display = numberOfPlayers > 2 ? "inline-block" : 'none';
                 document.getElementById('businessplayer4button').style.display = numberOfPlayers > 3 ? "inline-block" : 'none';
 
-                numberOfPlayers = document.getElementById('playerlist').children.length - 1;
                 for (let i = 0; i < numberOfPlayers; i++) {
                     document.getElementById(`player${i + 1}text`).innerHTML = `<u>${message.playerNames[i]}</u>`;
                 }
@@ -329,6 +330,7 @@ export function queue(name) {
             } else if (message.type === 'yourTurn') {
                 startTurnLayout(message.rollTwoDice); 
             } else if (message.type === 'rolledDice') {
+                // TODO: message.reroll contains a boolean whether it was a reroll or not
                 document.getElementById('rollnumber').style.display = "block";
                 document.getElementById('rolldoubles').style.display = "none";
                 document.querySelector('#rollnumber').innerHTML = `<u>${message.yourTurn ? 'You' : message.playerName} rolled a ${Array.isArray(message.roll) ? `${message.roll[0]} + ${message.roll[1]} = ${message.roll[0] + message.roll[1]}` : message.roll}!</u>`;
@@ -354,10 +356,10 @@ export function queue(name) {
                 document.querySelector(`#balance${message.playerCounter + 1}`).innerHTML = `<font size="5">Balance: ${message.newBalance}</font>`;
             } else if (message.type === 'showStadiumText') {
                 document.getElementById(`stadiumtext${message.index}`).style.display = "block";
-                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `${message.giverName} gave ${message.amount} coins to Player ${message.receiverName}.`;
+                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `${message.giverName} gave ${message.amount} coins to ${message.receiverName}.`;
             } else if (message.type === 'stadiumTotal') {
                 document.getElementById(`stadiumtext${message.index}`).style.display = "inline";
-                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `Player ${message.receiverName} received ${message.amount} coins from Stadium.`;
+                document.querySelector(`#stadiumtext${message.index}`).innerHTML = `${message.receiverName} received ${message.amount} coins from Stadium.`;
             } else if (message.type === 'showTVText') { 
                 document.getElementById('tvplayertextbuttons').style.display = "inline";
                 document.getElementById('tvplayerbuttons').style.display = "inline";
@@ -458,7 +460,7 @@ export function queue(name) {
                 }
             } else if (message.type === 'incomeReceived') {
                 if (!message.income.every(income => income === 0)) {
-                    document.getElementById('incomesummary').style.display = "inline";
+                    document.getElementById('incomesummary').style.display = "block";
                 }
         
                 // Buy establishment/landmark
