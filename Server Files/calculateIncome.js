@@ -72,7 +72,7 @@ export function calculateIncome(roll, game, room, WStoPlayerName, roomIndex) { /
             // * * Send a message to each client; each player gets 4 messages at a time
             for (let i = 1; i < room.length; i++) {
                 for (let j = 1; j < room.length; j++) {
-                    room[i].send(JSON.stringify({type: (j !== game.playerCounter + 1) ? 'showStadiumText' : 'stadiumTotal', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j]}));
+                    room[i].send(JSON.stringify({type: (j !== game.playerCounter + 1) ? 'showStadiumText' : 'stadiumTotal', index: j, giverName: WStoPlayerName.get(room[j]), receiverName: WStoPlayerName.get(room[playerCounter + 1]), amount: purpleIncome[j - 1]}));
                 }
             }
         }
